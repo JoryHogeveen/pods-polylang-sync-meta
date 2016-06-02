@@ -7,7 +7,7 @@ Plugin URI:
 Version: 0.1
 Author: Jory Hogeveen
 Author uri: https://www.keraweb.nl
-Description: Syncs related attachments fields. Also automatically created attachments if this is enabled
+Description: Syncs relationship meta fields and automatically creates translation if this is needed
 Text Domain: pods-polylang-sync-meta
 Domain Path: /languages
 */
