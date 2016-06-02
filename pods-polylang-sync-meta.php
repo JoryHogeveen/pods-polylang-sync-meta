@@ -2,19 +2,19 @@
 /*
 Requires: Pods and Polylang 1.8+
 
-Plugin Name: Pods Polylang Sync Media
+Plugin Name: Pods Polylang Sync Meta
 Plugin URI: 
 Version: 0.1
 Author: Jory Hogeveen
 Author uri: https://www.keraweb.nl
 Description: Syncs related attachments fields. Also automatically created attachments if this is enabled
-Text Domain: pods-polylang-sync-media
+Text Domain: pods-polylang-sync-meta
 Domain Path: /languages
 */
 
 ! defined( 'ABSPATH' ) and die();
 
-class Pods_Polylang_Sync_Media {
+class Pods_Polylang_Sync_Meta {
 
 	public $file_meta_keys = array( ); //'_thumbnail_id'
 	public $sync_post_types = array( 'product' ); //'post', 'page', 
@@ -296,4 +296,4 @@ class Pods_Polylang_Sync_Media {
 
 }
 
-$GLOBALS['pods_polylang_sync_media'] = new Pods_Polylang_Sync_Media();
+$GLOBALS['pods_polylang_sync_meta'] = new Pods_Polylang_Sync_Meta();
