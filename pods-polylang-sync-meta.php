@@ -21,6 +21,10 @@ class Pods_Polylang_Sync_Meta
 	//public $file_meta_keys = array( ); //'_thumbnail_id'
 	//public $sync_post_types = array( 'product' ); //'post', 'page',
 	public $pod_field_sync_option = 'pods_polylang_sync_meta';
+
+	/**
+	 * @var Pods
+	 */
 	public $cur_pod = null;
 
 	function __construct() {
@@ -42,6 +46,7 @@ class Pods_Polylang_Sync_Meta
 			return;
 		}
 
+		// @todo Redo save_post handler?
 		//add_filter( 'save_post', array( $this, 'maybe_sync_meta' ), 99999, 3 );
 
 		/**
@@ -295,19 +300,8 @@ class Pods_Polylang_Sync_Meta
 			$post_translations = pll_get_post_translations( $to ); // Get translations from post
 		}
 
+		// Remove the existing language from the loop.
 		unset( $post_translations[ $cur_lang ] );
-
-		/*$metas = array();
-		if ( pll_is_translated_post_type('attachment') ) {
-			// Attachment metafields (array of ID's)
-			$metas = array_merge( $metas, $this->file_meta_keys );
-		}*/
-		/*if ( pll_is_translated_post_type('page') ) {
-			// Related pages metafields
-			$metas = array_merge( $metas, array(
-		    	'rel_page',
-		    ));
-		}*/
 
 		// Loop through translations
 		foreach ( $post_translations as $lang => $translation_id ) {
@@ -361,7 +355,7 @@ class Pods_Polylang_Sync_Meta
 		$single = false;
 		if ( ! is_array( $meta_val ) ) {
 			$single = true;
-			//We need an array for the foreach loop
+			// We need an array for the foreach loop.
 			$meta_val = array( $meta_val );
 		}
 
@@ -372,19 +366,22 @@ class Pods_Polylang_Sync_Meta
 			$type = pods_v( 'pick_object', $pod_field, '' );
 		}
 
-		// Loop through all meta values
+		// Loop through all meta values.
 		$new_meta_val = array();
 		foreach( $meta_val as $rel_id ) {
-			// Get the translations
+			// Get the translations.
 			$translations = $this->get_obj_translations( $rel_id, $type );
 			if ( ! empty( $translations[ $lang ] ) ) {
-				// This translation exists, add it to the new array
+				// This translation exists, add it to the new array.
 				$new_meta_val[] = $translations[ $lang ];
+
 			} else {
-				// This translation does not exists
+
+				// This translation does not exists.
 				if ( 'post_type' === $type ) {
+
 					if ( 'attachment' === get_post_type( $rel_id ) ) {
-						// create attachment translation
+						// create attachment translation.
 						//$attachment = get_post( $rel_id );
 						//$new_meta_val[] = $this->translate_attachment( $rel_id, $lang, $attachment->post_parent );
 						$new_meta_val[] = $this->maybe_duplicate_media( $rel_id, $lang );
@@ -392,6 +389,7 @@ class Pods_Polylang_Sync_Meta
 						// @todo Create new post??
 						$new_meta_val[] = $this->maybe_translate_post( $rel_id, $lang, $translations );
 					}
+
 				} elseif ( 'taxonomy' === $type ) {
 					// @todo Create new term??
 					$new_meta_val[] = $this->maybe_translate_term( $rel_id, $lang, $translations );
@@ -402,11 +400,11 @@ class Pods_Polylang_Sync_Meta
 			}
 		}
 
-		// It this metafield was a single field, return only the first result
+		// This meta field was a single field, return only the first result.
 		if ( $single == true && isset( $new_meta_val[0] ) ) {
 			return $new_meta_val[0];
 		}
-		// No new data found, just return originals (non translated)
+		// No new data found, just return originals (non translated).
 		if ( empty( $new_meta_val ) ) {
 			$new_meta_val = $meta_val;
 		}
@@ -452,7 +450,7 @@ class Pods_Polylang_Sync_Meta
 			unset( $data['id'] );
 			// Get parent translation.
 			if ( $data['parent'] ) {
-				$data['parent'] = $this->translate_post( $data['parent'], $lang );
+				$data['parent'] = $this->maybe_translate_post( $data['parent'], $lang );
 			}
 
 			$new_id = wp_insert_post( $data );
@@ -488,7 +486,7 @@ class Pods_Polylang_Sync_Meta
 			$data = get_object_vars( $from );
 
 			if ( $data['parent'] ) {
-				$data['parent'] = $this->translate_term( $data['parent'], $lang );
+				$data['parent'] = $this->maybe_translate_term( $data['parent'], $lang );
 			}
 			if ( $data['slug'] ) {
 				$data['slug'] .= '-' . $lang;
@@ -525,7 +523,7 @@ class Pods_Polylang_Sync_Meta
 	public function maybe_duplicate_media( $from_id, $lang, $translations = array() ) {
 
 		if ( 'attachment' !== get_post_type( $from_id ) ) {
-			return $this->translate_post( $from_id, $lang, $translations );
+			return $this->maybe_translate_post( $from_id, $lang, $translations );
 		}
 
 		if ( empty( $translations ) ) {
