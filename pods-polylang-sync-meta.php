@@ -113,9 +113,11 @@ class Pods_Polylang_Sync_Meta
 	public function get_obj_metadata( $id, $type = '' ) {
 		$type = ( $type ) ? $type : $this->cur_pod->pod_data['type'];
 		switch( $type ) {
+			case 'post':
 			case 'post_type':
 				return get_post_meta( $id );
 			break;
+			case 'term':
 			case 'taxonomy':
 				return get_term_meta( $id );
 			break;
@@ -131,9 +133,11 @@ class Pods_Polylang_Sync_Meta
 	public function get_obj_translations( $id, $type = '' ) {
 		$type = ( $type ) ? $type : $this->cur_pod->pod_data['type'];
 		switch( $type ) {
+			case 'post':
 			case 'post_type':
 				return pll_get_post_translations( $id );
 			break;
+			case 'term':
 			case 'taxonomy':
 				return pll_get_term_translations( $id );
 			break;
@@ -149,9 +153,11 @@ class Pods_Polylang_Sync_Meta
 	public function update_obj_meta( $id, $key, $value, $prev = '', $type = '' ) {
 		$type = ( $type ) ? $type : $this->cur_pod->pod_data['type'];
 		switch( $type ) {
+			case 'post':
 			case 'post_type':
 				return update_post_meta( $id, $key, $value, $prev );
 			break;
+			case 'term':
 			case 'taxonomy':
 				return update_term_meta( $id, $key, $value, $prev );
 			break;
@@ -165,17 +171,20 @@ class Pods_Polylang_Sync_Meta
 	 */
 	public function is_translation_enabled( $pod ) {
 		switch( pods_v( 'type', $pod, '' ) ) {
+			case 'post':
 			case 'post_type':
 				if ( pll_is_translated_post_type( pods_v( 'name', $pod, '' ) ) ) {
 					return true;
 				}
 			break;
+			case 'term':
 			case 'taxonomy':
 				if ( pll_is_translated_taxonomy( pods_v( 'name', $pod, '' ) ) ) {
 					return true;
 				}
 			break;
 			case 'media':
+			case 'attachment':
 				if ( $this->get_pll_option( 'media_support' ) ) {
 					return true;
 				}
