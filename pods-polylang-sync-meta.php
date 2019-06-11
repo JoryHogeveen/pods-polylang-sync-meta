@@ -329,7 +329,7 @@ class Pods_Polylang_Sync_Meta
 						}
 
 						// Fix for thumbnail (get_posts_custom returns all serialized)
-						if ( $meta == '_thumbnail_id' && isset( $translation_meta[0] ) ) {
+						if ( '_thumbnail_id' === $meta && isset( $translation_meta[0] ) ) {
 							$translation_meta = $translation_meta[0];
 						}
 
@@ -405,7 +405,7 @@ class Pods_Polylang_Sync_Meta
 		}
 
 		// This meta field was a single field, return only the first result.
-		if ( $single == true && isset( $new_meta_val[0] ) ) {
+		if ( $single && isset( $new_meta_val[0] ) ) {
 			return $new_meta_val[0];
 		}
 		// No new data found, just return originals (non translated).
