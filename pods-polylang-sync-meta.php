@@ -278,7 +278,8 @@ class Pods_Polylang_Sync_Meta
 		if ( ! in_array( get_post_type( $to ), $this->sync_post_types ) ) {
 			return;
 		}*/
-		$cur_lang = PLL()->model->post->get_language( $to )->slug;
+		// @todo Terms
+		$cur_lang = pll_get_post_language( $to, 'slug' );
 
 		// @todo TEMP, only sync from default language!
 		/*if ( pll_default_language() != $cur_lang ) {
