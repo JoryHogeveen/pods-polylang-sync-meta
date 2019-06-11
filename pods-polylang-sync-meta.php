@@ -106,11 +106,11 @@ class Pods_Polylang_Sync_Meta
 	}
 
 	/**
-	 * @param int $id
+	 * @param int    $id
 	 * @param string $type
 	 * @return array
 	 */
-	public function get_obj_custom( $id, $type = '' ) {
+	public function get_obj_metadata( $id, $type = '' ) {
 		$type = ( $type ) ? $type : $this->cur_pod->pod_data['type'];
 		switch( $type ) {
 			case 'post_type':
@@ -124,7 +124,7 @@ class Pods_Polylang_Sync_Meta
 	}
 
 	/**
-	 * @param int $id
+	 * @param int    $id
 	 * @param string $type
 	 * @return array
 	 */
@@ -142,7 +142,7 @@ class Pods_Polylang_Sync_Meta
 	}
 
 	/**
-	 * @param int $id
+	 * @param int    $id
 	 * @param string $type
 	 * @return mixed
 	 */
@@ -200,12 +200,11 @@ class Pods_Polylang_Sync_Meta
 	}
 
 	/**
-	 * @param $keys
-	 * @param $sync
-	 * @param $from
-	 * @param $to
-	 * @param $lang
-	 *
+	 * @param array  $keys
+	 * @param bool   $sync
+	 * @param int    $from
+	 * @param int    $to
+	 * @param string $lang
 	 * @return mixed
 	 */
 	function maybe_sync_meta( $keys, $sync, $from, $to, $lang ) {
@@ -265,14 +264,14 @@ class Pods_Polylang_Sync_Meta
 	}
 
 	/**
-	 * @param      $metas
-	 * @param      $update
-	 * @param      $from
-	 * @param      $to
-	 * @param bool $to_lang
+	 * @param array  $metas
+	 * @param bool   $sync
+	 * @param int    $from
+	 * @param int    $to
+	 * @param string $to_lang
 	 */
-	function sync_meta_translations( $metas, $update, $from, $to, $to_lang = false ) {
-		/*if ( $update !== true ) {
+	function sync_meta_translations( $metas, $sync, $from, $to, $to_lang = '' ) {
+		/*if ( $sync !== true ) {
 			return;
 		}
 		if ( ! in_array( get_post_type( $to ), $this->sync_post_types ) ) {
@@ -293,7 +292,7 @@ class Pods_Polylang_Sync_Meta
 
 		if ( $to_lang && $from ) {
 			// This is a new draft (not saved yet)
-			$post_meta = $this->get_obj_custom( $from ); // Get metadata from orignial post
+			$post_meta = $this->get_obj_metadata( $from ); // Get metadata from orignial post
 			//$post_translations = pll_get_post_translations( $from ); // Get translations from orignial post
 			//$post_translations[ $to_lang ] = $to; // Add new post to the translations
 
@@ -309,7 +308,7 @@ class Pods_Polylang_Sync_Meta
 
 		// Loop through translations
 		foreach ( $post_translations as $lang => $translation_id ) {
-			if ( $to_lang != false && $lang != $to_lang ) {
+			if ( $to_lang && $lang != $to_lang ) {
 				continue;
 			}
 			//if ( $translation_id != $to ) {
@@ -430,9 +429,9 @@ class Pods_Polylang_Sync_Meta
 
 	/**
 	 * Get the translated post ID, will auto-create a translation if needed.
-	 * @param int $from_id
+	 * @param int    $from_id
 	 * @param string $lang
-	 * @param array $translations
+	 * @param array  $translations
 	 * @return int|null
 	 */
 	public function maybe_translate_post( $from_id, $lang, $translations = array() ) {
@@ -441,6 +440,7 @@ class Pods_Polylang_Sync_Meta
 			$translations = $this->get_obj_translations( $from_id, 'post_type' );
 		}
 		if ( ! empty( $translations[ $lang ] ) ) {
+			// Already translated.
 			return $translations[ $lang ];
 		}
 
@@ -452,6 +452,7 @@ class Pods_Polylang_Sync_Meta
 
 			unset( $data['ID'] );
 			unset( $data['id'] );
+
 			// Get parent translation.
 			if ( $data['parent'] ) {
 				$data['parent'] = $this->maybe_translate_post( $data['parent'], $lang );
@@ -469,9 +470,9 @@ class Pods_Polylang_Sync_Meta
 
 	/**
 	 * Get the translated term ID, will auto-create a translation if needed.
-	 * @param int $from_id
+	 * @param int    $from_id
 	 * @param string $lang
-	 * @param array $translations
+	 * @param array  $translations
 	 * @return int|null
 	 */
 	public function maybe_translate_term( $from_id, $lang, $translations = array() ) {
@@ -480,6 +481,7 @@ class Pods_Polylang_Sync_Meta
 			$translations = $this->get_obj_translations( $from_id, 'taxonomy' );
 		}
 		if ( ! empty( $translations[ $lang ] ) ) {
+			// Already translated.
 			return $translations[ $lang ];
 		}
 
@@ -488,6 +490,7 @@ class Pods_Polylang_Sync_Meta
 
 		if ( $from instanceof WP_Term ) {
 			$data = get_object_vars( $from );
+			unset( $data['term_id'] );
 
 			if ( $data['parent'] ) {
 				$data['parent'] = $this->maybe_translate_term( $data['parent'], $lang );
@@ -498,10 +501,10 @@ class Pods_Polylang_Sync_Meta
 
 			// Remove unnecessary data.
 			$data = array_intersect_key( $data, array(
-				'alias_of' => 1,
+				'alias_of'    => 1,
 				'description' => 1,
-				'parent' => 1,
-				'slug' => 1,
+				'parent'      => 1,
+				'slug'        => 1,
 			) );
 
 			$new = wp_insert_term( $from->name . ' ' . $lang, $from->taxonomy, $data );
@@ -519,9 +522,9 @@ class Pods_Polylang_Sync_Meta
 
 	/**
 	 * Get the translated media ID, will auto-create a translation if needed.
-	 * @param int $from_id
+	 * @param int    $from_id
 	 * @param string $lang
-	 * @param array $translations
+	 * @param array  $translations
 	 * @return int
 	 */
 	public function maybe_duplicate_media( $from_id, $lang, $translations = array() ) {
@@ -534,6 +537,7 @@ class Pods_Polylang_Sync_Meta
 			$translations = $this->get_obj_translations( $from_id, 'post_type' );
 		}
 		if ( ! empty( $translations[ $lang ] ) ) {
+			// Already translated.
 			return $translations[ $lang ];
 		}
 
@@ -543,8 +547,8 @@ class Pods_Polylang_Sync_Meta
 		$new_id = $from_id;
 
 		if ( ! empty( $src_language ) && $lang !== $src_language->slug ) {
-			$tr_id = PLL()->filters_media->create_media_translation( $new_id, $lang );
-			$post = get_post( $tr_id );
+			$tr_id  = PLL()->filters_media->create_media_translation( $new_id, $lang );
+			$post   = get_post( $tr_id );
 			$new_id = $post->ID;
 			wp_maybe_generate_attachment_metadata( $post );
 		}
