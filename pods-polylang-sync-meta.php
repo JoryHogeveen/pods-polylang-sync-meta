@@ -243,11 +243,14 @@ class Pods_Polylang_Sync_Meta
 				case 'file':
 					$file_meta[] = $key;
 					unset( $keys[ $key ] );
-				break;
+					break;
 				case 'pick':
 					$pick_meta[] = $key;
 					unset( $keys[ $key ] );
-				break;
+					break;
+				default:
+					$keys[] = $key;
+					break;
 			}
 		}
 		// @todo Merge them for now, maybe add separate handling in future.
