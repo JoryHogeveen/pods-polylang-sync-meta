@@ -79,7 +79,8 @@ class Pods_Polylang_Sync_Meta
 		 * @param int    $to   id of the post to which we paste informations
 		 * @param string $lang language slug
 		 */
-		add_filter( 'pll_copy_post_metas', array( $this, 'maybe_sync_meta' ), 99999, 5 );
+		add_filter( 'pll_copy_post_metas', array( $this, 'maybe_sync_post_meta' ), 99999, 5 );
+		add_filter( 'pll_copy_term_metas', array( $this, 'maybe_sync_term_meta' ), 99999, 5 );
 
 		add_filter( 'pods_admin_setup_edit_field_options', array( $this, 'pods_edit_field_options' ), 12, 2 );
 
@@ -254,22 +255,46 @@ class Pods_Polylang_Sync_Meta
 	 * @param string $lang
 	 * @return mixed
 	 */
-	function maybe_sync_meta( $keys, $sync, $from, $to, $lang ) {
+	public function maybe_sync_post_meta( $keys, $sync, $from, $to, $lang ) {
+		return $this->maybe_sync_meta( 'post', $keys, $sync, $from, $to, $lang );
+	}
 
-		if ( get_post( $from ) ) {
-			$this->cur_pod = pods( get_post_type( $from ) );
+	/**
+	 * @param array  $keys
+	 * @param bool   $sync
+	 * @param int    $from
+	 * @param int    $to
+	 * @param string $lang
+	 * @return mixed
+	 */
+	public function maybe_sync_term_meta( $keys, $sync, $from, $to, $lang ) {
+		return $this->maybe_sync_meta( 'term', $keys, $sync, $from, $to, $lang );
+	}
+
+	/**
+	 * @param array  $keys
+	 * @param bool   $sync
+	 * @param int    $from
+	 * @param int    $to
+	 * @param string $lang
+	 * @return mixed
+	 */
+	protected function maybe_sync_meta( $type, $keys, $sync, $from, $to, $lang ) {
+
+		if ( 'post' === $type && get_post( $from ) ) {
+			$this->cur_pod = pods( get_post_type( $from ), $from );
 		}
-		elseif ( $obj = get_term( $from ) ) {
-			$this->cur_pod = pods( $obj->taxonomy );
+		elseif ( 'term' === $type && $obj = get_term( $from ) ) {
+			$this->cur_pod = pods( $obj->taxonomy, $from );
 		}
-		elseif ( get_user_by( 'ID', $from ) ) {
+		/*elseif ( get_user_by( 'ID', $from ) ) {
 			// You can't translate users with Polylang.
 			return $keys;
 		}
 		elseif ( get_comment( $from ) ) {
 			// You can't translate comments with Polylang.
 			return $keys;
-		}
+		}*/
 
 		// Not a Pods object
 		if ( ! $this->cur_pod ) {
@@ -451,8 +476,8 @@ class Pods_Polylang_Sync_Meta
 		}
 
 		// This meta field was a single field, return only the first result.
-		if ( $single && isset( $new_meta_val[0] ) ) {
-			return $new_meta_val[0];
+		if ( $single ) {
+			return reset( $new_meta_val );
 		}
 		// No new data found, just return originals (non translated).
 		if ( empty( $new_meta_val ) ) {
