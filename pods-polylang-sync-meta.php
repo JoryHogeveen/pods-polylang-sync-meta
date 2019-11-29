@@ -4,7 +4,7 @@
  *
  * Plugin Name: Pods Polylang Sync Meta
  * Plugin URI: https://github.com/JoryHogeveen/pods-polylang-sync-meta/
- * Version: 0.2
+ * Version: 0.2.1
  * Author: Jory Hogeveen
  * Author uri: https://www.keraweb.nl
  * Description: Syncs relationship meta fields and automatically creates translation if this is needed
@@ -54,12 +54,14 @@ class Pods_Polylang_Sync_Meta
 			return;
 		}
 
-		if (   ! function_exists( 'PLL' )
+		if (
+			! function_exists( 'PLL' )
 			|| ! property_exists( PLL(), 'model' )
 			|| ! property_exists( PLL(), 'filters_media' )
 			|| ! function_exists( 'pll_get_post_translations' )
 			|| ! function_exists( 'pll_is_translated_post_type' )
-			|| ! function_exists( 'pods' ) ) {
+			|| ! function_exists( 'pods' )
+		) {
 			return;
 		}
 
