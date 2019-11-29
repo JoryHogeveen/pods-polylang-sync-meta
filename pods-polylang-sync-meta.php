@@ -14,9 +14,16 @@
 
 ! defined( 'ABSPATH' ) and die();
 
+function pods_polylang_sync_meta() {
+	return Pods_Polylang_Sync_Meta::get_instance();
+}
+pods_polylang_sync_meta();
+
 class Pods_Polylang_Sync_Meta
 {
 	CONST DOMAIN = 'pods-polylang-sync-meta';
+
+	private static $instance = null;
 
 	//public $file_meta_keys = array( ); //'_thumbnail_id'
 	//public $sync_post_types = array( 'product' ); //'post', 'page',
@@ -27,11 +34,21 @@ class Pods_Polylang_Sync_Meta
 	 */
 	public $cur_pod = null;
 
-	function __construct() {
-		add_action('wp_loaded', array( $this, 'init' ) );
+	public static function get_instance() {
+		if ( ! self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
 	}
 
-	function init() {
+	private function __construct() {
+		add_action( 'wp_loaded', array( $this, 'init' ) );
+	}
+
+	/**
+	 * Set hooks and check plugins.
+	 */
+	public function init() {
 
 		if ( ! is_admin() ) {
 			return;
@@ -565,5 +582,3 @@ class Pods_Polylang_Sync_Meta
 	}
 
 }
-
-$GLOBALS['pods_polylang_sync_meta'] = new Pods_Polylang_Sync_Meta();
