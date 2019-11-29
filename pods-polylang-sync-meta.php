@@ -101,7 +101,7 @@ class Pods_Polylang_Sync_Meta
 	 */
 	public function pods_edit_field_options( $options, $pod ) {
 
-		if ( in_array( $pod['type'], array( 'post_type', 'taxonomy', 'media' ) ) ) {
+		if ( in_array( $this->get_pod_type( $pod ), array( 'post_type', 'taxonomy', 'media' ) ) ) {
 			//$analysis_field_types = $this->get_sync_field_types();
 
 			if ( ! $this->is_translation_enabled( $pod ) ) {
@@ -123,12 +123,33 @@ class Pods_Polylang_Sync_Meta
 	}
 
 	/**
+	 * Get Pod object type.
+	 * @param  Pods  $pod
+	 * @return string
+	 */
+	public function get_pod_type( $pod = null ) {
+		if ( ! $pod ) {
+			$pod = $this->cur_pod;
+		}
+		if ( ! $pod ) {
+			return '';
+		}
+
+		$type = pods_v( 'type', $pod, '' );
+		if ( ! $type ) {
+			$type = ( isset( $pod->pod_data ) ) ? pods_v( 'type', $pod->pod_data, '' ) : '';
+		}
+
+		return (string) $type;
+	}
+
+	/**
 	 * @param int    $id
 	 * @param string $type
 	 * @return array
 	 */
 	public function get_obj_metadata( $id, $type = '' ) {
-		$type = ( $type ) ? $type : $this->cur_pod->pod_data['type'];
+		$type = ( $type ) ? $type : $this->get_pod_type();
 		switch( $type ) {
 			case 'post':
 			case 'post_type':
@@ -148,7 +169,7 @@ class Pods_Polylang_Sync_Meta
 	 * @return array
 	 */
 	public function get_obj_translations( $id, $type = '' ) {
-		$type = ( $type ) ? $type : $this->cur_pod->pod_data['type'];
+		$type = ( $type ) ? $type : $this->get_pod_type();
 		switch( $type ) {
 			case 'post':
 			case 'post_type':
@@ -168,7 +189,7 @@ class Pods_Polylang_Sync_Meta
 	 * @return mixed
 	 */
 	public function update_obj_meta( $id, $key, $value, $prev = '', $type = '' ) {
-		$type = ( $type ) ? $type : $this->cur_pod->pod_data['type'];
+		$type = ( $type ) ? $type : $this->get_pod_type();
 		switch( $type ) {
 			case 'post':
 			case 'post_type':
@@ -187,7 +208,7 @@ class Pods_Polylang_Sync_Meta
 	 * @return bool
 	 */
 	public function is_translation_enabled( $pod ) {
-		switch( pods_v( 'type', $pod, '' ) ) {
+		switch( $this->get_pod_type( $pod ) ) {
 			case 'post':
 			case 'post_type':
 				if ( pll_is_translated_post_type( pods_v( 'name', $pod, '' ) ) ) {
