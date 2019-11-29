@@ -385,56 +385,52 @@ class Pods_Polylang_Sync_Meta
 			remove_action( 'add_attachment', array( PLL()->advanced_media, 'duplicate_media' ), 20 ); // After default add (20)
 		}
 
-		if ( $to_lang && $from ) {
-			// This is a new draft (not saved yet)
-			$post_meta = $this->get_obj_metadata( $from ); // Get metadata from orignial post
-			//$post_translations = pll_get_post_translations( $from ); // Get translations from orignial post
-			//$post_translations[ $to_lang ] = $to; // Add new post to the translations
+		$obj_meta = $this->get_obj_metadata( $from ); // Get metadata from post.
 
-			$post_translations = array( $to_lang => $to ); // Add new post to the translations (only ons language is needed since its a new draft, we don't need to update the other languages (yet))
+		if ( $to_lang && $to ) {
+			$translations = array( $to_lang => $to );
 		} else {
-			// This is a save_post action
-			$post_meta = get_post_custom(); // Get metadata from post
-			$post_translations = pll_get_post_translations( $to ); // Get translations from post
+			$translations = $this->get_obj_translations( $from ); // Get translations from post.
 		}
 
 		// Remove the existing language from the loop.
-		unset( $post_translations[ $cur_lang ] );
+		unset( $translations[ $cur_lang ] );
 
 		// Loop through translations
-		foreach ( $post_translations as $lang => $translation_id ) {
-			if ( $to_lang && $lang != $to_lang ) {
+		foreach ( $translations as $lang => $translation_id ) {
+			if ( $to_lang && $lang !== $to_lang ) {
 				continue;
 			}
 			//if ( $translation_id != $to ) {
-				foreach ( $metas as $meta ) {
-					// Loop through all meta fields
-					if ( isset( $post_meta[ $meta ] ) ) {
-						//echo $meta.'<br>';
-						//print_r($post_meta[ $meta ]);
+			foreach ( $metas as $meta ) {
+				// Loop through all enabled meta fields.
+				if ( isset( $obj_meta[ $meta ] ) ) {
+					//echo $meta.'<br>';
+					//print_r($obj_meta[ $meta ]);
 
-						$pod_field = $this->cur_pod->fields( $meta );
+					$pod_field = $this->cur_pod->fields( $meta );
 
-						// Get metafield translations
-						$translation_meta = $this->get_meta_translations( $post_meta[ $meta ], $lang, $pod_field );
+					// Get metafield translations
+					$translation_meta = $this->get_meta_translations( $obj_meta[ $meta ], $lang, $pod_field );
 
-						if ( null === $translation_meta ) {
-							continue;
-						}
-
-						// Fix for thumbnail (get_posts_custom returns all serialized)
-						if ( '_thumbnail_id' === $meta && isset( $translation_meta[0] ) ) {
-							$translation_meta = $translation_meta[0];
-						}
-
-						// http://pods.io/docs/code/pods/save/
-						//$pod = pods( get_post_type( $to ), $to );
-						//$pod->save( $meta, $translation_meta );
-
-						// Update translation with translated metadata
-						$this->update_obj_meta( $translation_id, $meta, $translation_meta );
+					if ( null === $translation_meta ) {
+						continue;
 					}
+
+					// @todo Remove?? This is handled by Polylang: Fix for thumbnail (get_posts_custom returns all serialized)
+					if ( '_thumbnail_id' === $meta && isset( $translation_meta[0] ) ) {
+						$translation_meta = $translation_meta[0];
+
+					}
+
+					// http://pods.io/docs/code/pods/save/
+					//$pod = pods( get_post_type( $to ), $to );
+					//$pod->save( $meta, $translation_meta );
+
+					// Update translation with translated metadata
+					$this->update_obj_meta( $translation_id, $meta, $translation_meta );
 				}
+			}
 			//}
 		}
 
