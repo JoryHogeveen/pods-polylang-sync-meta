@@ -1,170 +1,443 @@
-<?php 
-/*
-Requires: Pods and Polylang 1.8+
-
-Plugin Name: Pods Polylang Sync Meta
-Plugin URI: 
-Version: 0.1
-Author: Jory Hogeveen
-Author uri: https://www.keraweb.nl
-Description: Syncs relationship meta fields and automatically creates translation if this is needed
-Text Domain: pods-polylang-sync-meta
-Domain Path: /languages
-*/
+<?php
+/**
+ * Requires: Pods and Polylang 1.9.2+
+ *
+ * Plugin Name: Pods Polylang Sync Meta
+ * Plugin URI: https://github.com/JoryHogeveen/pods-polylang-sync-meta/
+ * Version: 0.2.1
+ * Author: Jory Hogeveen
+ * Author uri: https://www.keraweb.nl
+ * Description: Syncs relationship meta fields and automatically creates translation if this is needed
+ * Text Domain: pods-polylang-sync-meta
+ * Domain Path: /languages
+ */
 
 ! defined( 'ABSPATH' ) and die();
 
-class Pods_Polylang_Sync_Meta {
+function pods_polylang_sync_meta() {
+	return Pods_Polylang_Sync_Meta::get_instance();
+}
+pods_polylang_sync_meta();
 
-	public $file_meta_keys = array( ); //'_thumbnail_id'
-	public $sync_post_types = array( 'product' ); //'post', 'page', 
+class Pods_Polylang_Sync_Meta
+{
+	CONST DOMAIN = 'pods-polylang-sync-meta';
 
-	function __construct() {
-		add_action('wp_loaded', array( $this, 'init' ) );
-	}
+	private static $instance = null;
 
-	function init() {
+	//public $file_meta_keys = array( ); //'_thumbnail_id'
+	//public $sync_post_types = array( 'product' ); //'post', 'page',
+	public $pod_field_sync_option = 'pods_polylang_sync_meta';
 
-		if ( is_admin() ) {
-
-			if (   ! function_exists( 'PLL' ) 
-				|| ! property_exists( PLL(), 'model' )
-				|| ! property_exists( PLL(), 'filters_media' )
-				|| ! function_exists( 'pll_get_post_translations' )
-				|| ! function_exists( 'pll_is_translated_post_type' )
-				|| ! function_exists( 'pods' ) ) {
-				return;
-			}
-
-			$fields = get_posts( array(
-				'posts_per_page' => -1,
-				'post_type' => '_pods_field',
-				'meta_query' => array(array(
-					'key' => 'type',
-					'value' => 'file',
-				)),
-				'suppress_filters' => true 
-			) );
-
-			foreach ($fields as $field) {
-				$this->file_meta_keys[] = $field->post_name;
-			}
-			$this->file_meta_keys = apply_filters( 'pods_pll_copy_post_metas_file', $this->file_meta_keys );
-
-			//print_r($this->file_meta_keys);
-
-			//add_filter( 'pll_copy_post_metas', 	array( $this, 'pll_copy_post_metas' ), 		99, 2 );
-			//add_action( 'add_meta_boxes', 		array( $this, 'add_meta_boxes' ), 			2, 2 );
-			add_filter( 'save_post', 			array( $this, 'sync_meta_translations' ), 	9999, 3 );
-
-		}
-
-	}
-
-	/*
-	 * Metafields 
+	/**
+	 * @var Pods
 	 */
+	public $cur_pod = null;
 
-	function pll_copy_post_metas( $meta_keys, $sync ) {
-
-		// Add related attachments meta when attachments are not translated
-		if ( ! pll_is_translated_post_type('attachment') || $sync == false ) {
-			$meta_keys = array_merge( $meta_keys, $this->file_meta_keys );
+	public static function get_instance() {
+		if ( ! self::$instance ) {
+			self::$instance = new self();
 		}
-		// Add related pages meta when pages are not translated
-		/*if ( ! pll_is_translated_post_type('page') || $sync == false ) {
-			$meta_keys = array_merge( $meta_keys, array(
-		    	'rel_page',
-		    ));
+		return self::$instance;
+	}
+
+	private function __construct() {
+		add_action( 'wp_loaded', array( $this, 'init' ) );
+	}
+
+	/**
+	 * Set hooks and check plugins.
+	 */
+	public function init() {
+
+		if ( ! is_admin() ) {
+			return;
+		}
+
+		if (
+			! function_exists( 'PLL' )
+			|| ! property_exists( PLL(), 'model' )
+			|| ! property_exists( PLL(), 'filters_media' )
+			|| ! function_exists( 'pll_get_post_translations' )
+			|| ! function_exists( 'pll_is_translated_post_type' )
+			|| ! function_exists( 'pods' )
+		) {
+			return;
+		}
+
+		// @todo Redo save_post handler?
+		//add_filter( 'save_post', array( $this, 'maybe_sync_meta' ), 99999, 3 );
+
+		/**
+		 * -- Docs from Polylang --
+		 * Filter the custom fields to copy or synchronize
+		 *
+		 * @since 0.6
+		 * @since 1.9.2 The `$from`, `$to`, `$lang` parameters were added.
+		 *
+		 * @param array  $keys list of custom fields names
+		 * @param bool   $sync true if it is synchronization, false if it is a copy
+		 * @param int    $from id of the post from which we copy information
+		 * @param int    $to   id of the post to which we paste information
+		 * @param string $lang language slug
+		 */
+		add_filter( 'pll_copy_post_metas', array( $this, 'maybe_sync_post_meta' ), 99999, 5 );
+		add_filter( 'pll_copy_term_metas', array( $this, 'maybe_sync_term_meta' ), 99999, 5 );
+
+		add_filter( 'pods_admin_setup_edit_field_options', array( $this, 'pods_edit_field_options' ), 12, 2 );
+
+	}
+
+	/**
+	 * @param $key
+	 * @return mixed
+	 */
+	public function get_pll_option( $key ) {
+		$options = PLL()->options;
+		return ( isset( $options[ $key ] ) ) ? $options[ $key ] : null;
+	}
+
+	/**
+	 * @param array $options
+	 * @param array $pod
+	 * @return array
+	 */
+	public function pods_edit_field_options( $options, $pod ) {
+
+		if ( in_array( $this->get_pod_type( $pod ), array( 'post_type', 'taxonomy', 'media' ) ) ) {
+			//$analysis_field_types = $this->get_sync_field_types();
+
+			if ( ! $this->is_translation_enabled( $pod ) ) {
+				return $options;
+			}
+
+			$options['advanced'][ __( 'Polylang', self::DOMAIN ) ] = array(
+				$this->pod_field_sync_option => array(
+					'label' => __( 'Enable meta field sync', self::DOMAIN ),
+					'type'  => 'boolean',
+					'help'  => '',
+					/*'depends-on' => array(
+						'type' => $analysis_field_types,
+					),*/
+				),
+			);
+		}
+		return $options;
+	}
+
+	/**
+	 * Get Pod object type.
+	 * @param  Pods  $pod
+	 * @return string
+	 */
+	public function get_pod_type( $pod = null ) {
+		if ( ! $pod ) {
+			$pod = $this->cur_pod;
+		}
+		if ( ! $pod ) {
+			return '';
+		}
+
+		$type = pods_v( 'type', $pod, '' );
+		if ( ! $type ) {
+			$type = ( isset( $pod->pod_data ) ) ? pods_v( 'type', $pod->pod_data, '' ) : '';
+		}
+
+		return (string) $type;
+	}
+
+	/**
+	 * @param int    $id
+	 * @param string $type
+	 * @return array
+	 */
+	public function get_obj_metadata( $id, $type = '' ) {
+		$type = ( $type ) ? $type : $this->get_pod_type();
+		switch( $type ) {
+			case 'post':
+			case 'post_type':
+				return get_post_meta( $id );
+				break;
+			case 'term':
+			case 'taxonomy':
+				return get_term_meta( $id );
+				break;
+		}
+		return array();
+	}
+
+	/**
+	 * @param int    $id
+	 * @param string $type
+	 * @return string
+	 */
+	public function get_obj_language( $id, $field = 'slug', $type = '' ) {
+		$type = ( $type ) ? $type : $this->get_pod_type();
+		switch( $type ) {
+			case 'post':
+			case 'post_type':
+				return pll_get_post_language( $id, $field );
+				break;
+			case 'term':
+			case 'taxonomy':
+				return pll_get_term_language( $id, $field );
+				break;
+		}
+		return '';
+	}
+
+	/**
+	 * @param int    $id
+	 * @param string $type
+	 * @return array
+	 */
+	public function get_obj_translations( $id, $type = '' ) {
+		$type = ( $type ) ? $type : $this->get_pod_type();
+		switch( $type ) {
+			case 'post':
+			case 'post_type':
+				return pll_get_post_translations( $id );
+				break;
+			case 'term':
+			case 'taxonomy':
+				return pll_get_term_translations( $id );
+				break;
+		}
+		return array();
+	}
+
+	/**
+	 * @param int    $id
+	 * @param string $type
+	 * @return mixed
+	 */
+	public function update_obj_meta( $id, $key, $value, $prev = '', $type = '' ) {
+		$type = ( $type ) ? $type : $this->get_pod_type();
+		switch( $type ) {
+			case 'post':
+			case 'post_type':
+				return update_post_meta( $id, $key, $value, $prev );
+				break;
+			case 'term':
+			case 'taxonomy':
+				return update_term_meta( $id, $key, $value, $prev );
+				break;
+		}
+		return null;
+	}
+
+	/**
+	 * @param array $pod
+	 * @return bool
+	 */
+	public function is_translation_enabled( $pod ) {
+		switch( $this->get_pod_type( $pod ) ) {
+			case 'post':
+			case 'post_type':
+				if ( pll_is_translated_post_type( pods_v( 'name', $pod, '' ) ) ) {
+					return true;
+				}
+				break;
+			case 'term':
+			case 'taxonomy':
+				if ( pll_is_translated_taxonomy( pods_v( 'name', $pod, '' ) ) ) {
+					return true;
+				}
+				break;
+			case 'media':
+			case 'attachment':
+				if ( $this->get_pll_option( 'media_support' ) ) {
+					return true;
+				}
+				break;
+		}
+		return false;
+	}
+
+	/**
+	 * @param array $field_data
+	 * @return bool
+	 */
+	public function is_field_sync_enabled( $field_data ) {
+		if ( pods_v( $this->pod_field_sync_option, $field_data, false ) ) {
+			return true;
+		}
+		$options = pods_v( 'options', $field_data, false );
+		if ( pods_v( $this->pod_field_sync_option, $options, false ) ) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * @param array  $keys
+	 * @param bool   $sync
+	 * @param int    $from
+	 * @param int    $to
+	 * @param string $lang
+	 * @return mixed
+	 */
+	public function maybe_sync_post_meta( $keys, $sync, $from, $to, $lang ) {
+		return $this->maybe_sync_meta( 'post', $keys, $sync, $from, $to, $lang );
+	}
+
+	/**
+	 * @param array  $keys
+	 * @param bool   $sync
+	 * @param int    $from
+	 * @param int    $to
+	 * @param string $lang
+	 * @return mixed
+	 */
+	public function maybe_sync_term_meta( $keys, $sync, $from, $to, $lang ) {
+		return $this->maybe_sync_meta( 'term', $keys, $sync, $from, $to, $lang );
+	}
+
+	/**
+	 * @param array  $keys
+	 * @param bool   $sync
+	 * @param int    $from
+	 * @param int    $to
+	 * @param string $lang
+	 * @return mixed
+	 */
+	protected function maybe_sync_meta( $type, $keys, $sync, $from, $to, $lang ) {
+
+		if ( 'post' === $type && get_post( $from ) ) {
+			$this->cur_pod = pods( get_post_type( $from ), $from );
+		}
+		elseif ( 'term' === $type && $obj = get_term( $from ) ) {
+			$this->cur_pod = pods( $obj->taxonomy, $from );
+		}
+		/*elseif ( get_user_by( 'ID', $from ) ) {
+			// You can't translate users with Polylang.
+			return $keys;
+		}
+		elseif ( get_comment( $from ) ) {
+			// You can't translate comments with Polylang.
+			return $keys;
 		}*/
-	    return $meta_keys;
+
+		// Not a Pods object
+		if ( ! $this->cur_pod ) {
+			return $keys;
+		}
+
+		$fields = $this->cur_pod->fields();
+		$file_meta = array();
+		$pick_meta = array();
+		foreach ( $fields as $key => $data ) {
+			if ( ! $this->is_field_sync_enabled( $data ) ) {
+				// No options available or sync is turned off for this field.
+				unset( $keys[ $key ] );
+				continue;
+			}
+			// Only non-relationship keys are added to the "regular" keys, relationship types (file/pick) are removed.
+			switch( pods_v( 'type', $data, '' ) ) {
+				case 'file':
+					$file_meta[] = $key;
+					unset( $keys[ $key ] );
+					break;
+				case 'pick':
+					$pick_meta[] = $key;
+					unset( $keys[ $key ] );
+					break;
+				default:
+					$keys[] = $key;
+					break;
+			}
+		}
+		// @todo Merge them for now, maybe add separate handling in future.
+		$rel_keys = array_merge( $file_meta, $pick_meta );
+
+		if ( $rel_keys ) {
+			//$this->sync_meta_translations( $post_id, $post, $update, $to_lang = false, $from_post_id = false );
+			$this->sync_meta_translations( $rel_keys, $sync, $from, $to, $lang );
+		}
+
+		return $keys;
 	}
 
-	function add_meta_boxes( $post_type, $post ){
-		// source: polylang/modules/admin-sync.php
-		// Is it a new draft and is to be translated?
-		if ( 'post-new.php' == $GLOBALS['pagenow'] && isset( $_GET['from_post'], $_GET['new_lang'] ) && pll_is_translated_post_type( $post->post_type ) ) {
-			$from_post_id = (int) $_GET['from_post'];
-			$lang = PLL()->model->get_language( $_GET['new_lang'] );
-			$this->sync_meta_translations( $post->ID, $post, true, $lang->slug, $from_post_id );
+	/**
+	 * @param array  $metas
+	 * @param bool   $sync
+	 * @param int    $from
+	 * @param int    $to
+	 * @param string $to_lang
+	 */
+	protected function sync_meta_translations( $metas, $sync, $from, $to, $to_lang = '' ) {
+		/*if ( $sync !== true ) {
+			return;
 		}
-	}
+		if ( ! in_array( get_post_type( $to ), $this->sync_post_types ) ) {
+			return;
+		}*/
 
-	function sync_meta_translations( $post_id, $post, $update, $to_lang = false, $from_post_id = false ) {
-		if ( $update !== true ) {
+		$cur_lang = $this->get_obj_language( $from );
+		if ( ! $cur_lang ) {
 			return;
 		}
-		if ( ! in_array( get_post_type($post_id), $this->sync_post_types ) ) {
+
+		// @todo TEMP, only sync from default language!
+		/*if ( pll_default_language() != $cur_lang ) {
 			return;
-		}
-		$cur_lang = PLL()->model->post->get_language( $post_id )->slug;
-		// TEMP, only sync from default language!
-		if ( pll_default_language() != $cur_lang ) {
-			return;
-		}
+		}*/
 
 		if ( isset( PLL()->advanced_media ) ) {
 			// Fix for Polylang Pro -> polylang/modules/media/admin-advanced-media.php // classname: PLL_Admin_Advanced_Media
 			remove_action( 'add_attachment', array( PLL()->advanced_media, 'duplicate_media' ), 20 ); // After default add (20)
 		}
 
-		if ( $to_lang && $from_post_id ) {
-			// This is a new draft (not saved yet)
-			$post_meta = get_post_custom( $from_post_id ); // Get metadata from orignial post
-			//$post_translations = pll_get_post_translations( $from_post_id ); // Get translations from orignial post
-			//$post_translations[ $to_lang ] = $post_id; // Add new post to the translations
+		$obj_meta = $this->get_obj_metadata( $from ); // Get metadata from post.
 
-			$post_translations = array( $to_lang => $post_id ); // Add new post to the translations (only ons language is needed since its a new draft, we don't need to update the other languages (yet))
+		if ( $to_lang && $to ) {
+			$translations = array( $to_lang => $to );
 		} else {
-			// This is a save_post action
-			$post_meta = get_post_custom(); // Get metadata from post
-			$post_translations = pll_get_post_translations( $post_id ); // Get translations from post
+			$translations = $this->get_obj_translations( $from ); // Get translations from post.
 		}
 
-		unset( $post_translations[ $cur_lang ] );
-
-		$metas = array();
-		if ( pll_is_translated_post_type('attachment') ) {
-			// Attachment metafields (array of ID's)
-			$metas = array_merge( $metas, $this->file_meta_keys );
-		}
-		/*if ( pll_is_translated_post_type('page') ) {
-			// Related pages metafields
-			$metas = array_merge( $metas, array(
-		    	'rel_page',
-		    ));
-		}*/
+		// Remove the existing language from the loop.
+		unset( $translations[ $cur_lang ] );
 
 		// Loop through translations
-		foreach ( $post_translations as $lang => $translation_id ) {
-			if ( $to_lang != false && $lang != $to_lang ) {
+		foreach ( $translations as $lang => $translation_id ) {
+			if ( $to_lang && $lang !== $to_lang ) {
 				continue;
 			}
-			//if ( $translation_id != $post_id ) {
-				foreach ( $metas as $meta ) {
-					// Loop through all meta fields
-					if ( isset( $post_meta[ $meta ] ) ) {
-						//echo $meta.'<br>';
-						//print_r($post_meta[ $meta ]);
+			//if ( $translation_id != $to ) {
+			foreach ( $metas as $meta ) {
+				// Loop through all enabled meta fields.
+				if ( isset( $obj_meta[ $meta ] ) ) {
+					//echo $meta.'<br>';
+					//print_r($obj_meta[ $meta ]);
 
-						// Get metafield translations
-						$translation_meta = $this->get_meta_translations( $post_meta[ $meta ], $lang );
+					$pod_field = $this->cur_pod->fields( $meta );
 
-						//print_r($translation_meta);
+					// Get metafield translations
+					$translation_meta = $this->get_meta_translations( $obj_meta[ $meta ], $lang, $pod_field );
 
-						// Fix for thumbnail (get_posts_custom returns all serialized)
-						if ( $meta == '_thumbnail_id' && isset( $translation_meta[0] ) ) {
-							$translation_meta = $translation_meta[0];
-						}
-
-						// http://pods.io/docs/code/pods/save/
-						//$pod = pods( get_post_type( $post_id ), $post_id );
-						//$pod->save( $meta, $translation_meta );
-
-						// Update translation with translated metadata
-						update_post_meta( $translation_id, $meta, $translation_meta );
+					if ( null === $translation_meta ) {
+						continue;
 					}
+
+					// @todo Remove?? This is handled by Polylang: Fix for thumbnail (get_posts_custom returns all serialized)
+					if ( '_thumbnail_id' === $meta && isset( $translation_meta[0] ) ) {
+						$translation_meta = $translation_meta[0];
+					}
+
+					// Fix for single rel fields.
+					if ( is_array( $translation_meta ) && 1 === count( $translation_meta ) ) {
+						$translation_meta = reset( $translation_meta );
+					}
+
+					// http://pods.io/docs/code/pods/save/
+					//$pod = pods( get_post_type( $to ), $to );
+					//$pod->save( $meta, $translation_meta );
+
+					// Update translation with translated metadata
+					$this->update_obj_meta( $translation_id, $meta, $translation_meta );
 				}
+			}
 			//}
 		}
 
@@ -175,45 +448,74 @@ class Pods_Polylang_Sync_Meta {
 
 	}
 
-	function get_meta_translations( $meta, $lang ) {
+	/**
+	 * @param  int|int[]  $meta_val
+	 * @param  string     $lang
+	 * @param  array      $pod_field
+	 * @return array|mixed|null
+	 */
+	public function get_meta_translations( $meta_val, $lang, $pod_field ) {
+		if ( ! $this->is_field_sync_enabled( $pod_field ) ) {
+			return null;
+		}
 		// Is it a single field or an array?
 		$single = false;
-		if ( ! is_array( $meta ) ) {
+		if ( ! is_array( $meta_val ) ) {
 			$single = true;
-			//We need an array for the foreach loop
-			$meta = array( $meta );
+			// We need an array for the foreach loop.
+			$meta_val = array( $meta_val );
 		}
 
-		// Loop through all meta values
-		$new_meta = array();
-		foreach( $meta as $meta_id ) {
-			// Get the translations
-			$translations = pll_get_post_translations( $meta_id );
-			if ( isset( $translations[ $lang ] ) ) {
-				// This translation exists, add it to the new array
-				$new_meta[] = $translations[ $lang ];
+		$type = '';
+		if ( 'file' === pods_v( 'type', $pod_field, '' ) ) {
+			$type = 'post_type';
+		} elseif ( 'pick' === pods_v( 'type', $pod_field, '' ) ) {
+			$type = pods_v( 'pick_object', $pod_field, '' );
+		}
+
+		// Loop through all meta values.
+		$new_meta_val = array();
+		foreach( $meta_val as $rel_id ) {
+			// Get the translations.
+			$translations = $this->get_obj_translations( $rel_id, $type );
+			if ( ! empty( $translations[ $lang ] ) ) {
+				// This translation exists, add it to the new array.
+				$new_meta_val[] = $translations[ $lang ];
+
 			} else {
-				// This translation does not exists
-				if ( get_post_type( $meta_id ) == 'attachment') {
-					// create attachment translation
-					//$attachment = get_post( $meta_id );
-					//$new_meta[] = $this->translate_attachment( $meta_id, $lang, $attachment->post_parent );
-					$new_meta[] = $this->duplicate_media( $meta_id, $lang );
+
+				// This translation does not exists.
+				if ( 'post_type' === $type ) {
+
+					if ( 'attachment' === get_post_type( $rel_id ) ) {
+						// create attachment translation.
+						//$attachment = get_post( $rel_id );
+						//$new_meta_val[] = $this->translate_attachment( $rel_id, $lang, $attachment->post_parent );
+						$new_meta_val[] = $this->maybe_duplicate_media( $rel_id, $lang );
+					} else {
+						// @todo Create new post??
+						$new_meta_val[] = $this->maybe_translate_post( $rel_id, $lang, $translations );
+					}
+
+				} elseif ( 'taxonomy' === $type ) {
+					// @todo Create new term??
+					$new_meta_val[] = $this->maybe_translate_term( $rel_id, $lang, $translations );
 				} else {
 					// Just use regular one
-					$new_meta[] = $meta_id;
+					$new_meta_val[] = $rel_id;
 				}
 			}
 		}
-		// It this metafield was a single field, returng only the first result
-		if ( $single == true && isset( $new_meta[0] ) ) {
-			return $new_meta[0];
+
+		// This meta field was a single field, return only the first result.
+		if ( $single ) {
+			return reset( $new_meta_val );
 		}
-		// No new data found, just return originals (non translated)
-		if ( empty( $new_meta ) ) {
-			$new_meta = $meta;
+		// No new data found, just return originals (non translated).
+		if ( empty( $new_meta_val ) ) {
+			$new_meta_val = $meta_val;
 		}
-		return $new_meta;
+		return $new_meta_val;
 	}
 
 	/*function add_meta_translation( $post_id, $lang ) {
@@ -229,71 +531,132 @@ class Pods_Polylang_Sync_Meta {
 		}
 	}*/
 
-
 	/**
-	 * Creates media translation
-	 *
-	 * @param int $post_id
+	 * Get the translated post ID, will auto-create a translation if needed.
+	 * @param int    $from_id
+	 * @param string $lang
+	 * @param array  $translations
+	 * @return int|null
 	 */
-	public function duplicate_media( $post_id, $new_lang ) {
+	public function maybe_translate_post( $from_id, $lang, $translations = array() ) {
 
-		// source -> polylang/modules/media/admin-advanced-media.php
-
-		$src_language = PLL()->model->post->get_language( $post_id );
-
-		if ( ! empty( $src_language ) ) {
-			if ( $new_lang !== $src_language->slug ) {
-				$tr_id = PLL()->filters_media->create_media_translation( $post_id, $new_lang );
-				$post = get_post( $tr_id );
-				$post_id = $post->ID;
-				wp_maybe_generate_attachment_metadata( $post );
-			}
+		if ( empty( $translations ) ) {
+			$translations = $this->get_obj_translations( $from_id, 'post_type' );
 		}
-		return $post_id;
+		if ( ! empty( $translations[ $lang ] ) ) {
+			// Already translated.
+			return $translations[ $lang ];
+		}
+
+		$new_id = $from_id;
+		$from = get_post( $from_id );
+
+		if ( $from instanceof WP_Post ) {
+			$data = get_object_vars( $from );
+
+			unset( $data['ID'] );
+			unset( $data['id'] );
+
+			// Get parent translation.
+			if ( $data['parent'] ) {
+				$data['parent'] = $this->maybe_translate_post( $data['parent'], $lang );
+			}
+
+			$new_id = wp_insert_post( $data );
+
+			// Save the translations.
+			pll_set_post_language( $new_id, $lang );
+			$translations[ $lang ] = $new_id;
+			pll_save_post_translations( $translations );
+		}
+		return $new_id;
 	}
 
-
-	// Source: https://github.com/aucor/polylang-translate-existing-media
 	/**
-	 * Translate attachment
-	 *
-	 * @param int $attachment_id id of the attachment in original language
-	 * @param string $new_lang new language slug
-	 * @param int $parent_id id of the parent of the translated attachments (post ID)
-	 *
-	 * @return int translated id
+	 * Get the translated term ID, will auto-create a translation if needed.
+	 * @param  int     $from_id
+	 * @param  string  $lang
+	 * @param  array   $translations
+	 * @return int|null
 	 */
-	function translate_attachment($attachment_id, $new_lang, $parent_id) {
-		$post = get_post($attachment_id);
-		$post_id = $post->ID;
-		// if there's existing translation, use it
-		$existing_translation = pll_get_post($post_id, $new_lang);
-		if(!empty($existing_translation)) {
-			return $existing_translation; // existing translated attachment
+	public function maybe_translate_term( $from_id, $lang, $translations = array() ) {
+
+		if ( empty( $translations ) ) {
+			$translations = $this->get_obj_translations( $from_id, 'taxonomy' );
 		}
-		$post->ID = null; // will force the creation
-		$post->post_parent = $parent_id ? $parent_id : 0;
-		$tr_id = wp_insert_attachment($post);
-		add_post_meta($tr_id, '_wp_attachment_metadata', get_post_meta($post_id, '_wp_attachment_metadata', true));
-		add_post_meta($tr_id, '_wp_attached_file', get_post_meta($post_id, '_wp_attached_file', true));
-		// copy alternative text to be consistent with title, caption and description copied when cloning the post
-		if ($meta = get_post_meta($post_id, '_wp_attachment_image_alt', true)) {
-			add_post_meta($tr_id, '_wp_attachment_image_alt', $meta);
+		if ( ! empty( $translations[ $lang ] ) ) {
+			// Already translated.
+			return $translations[ $lang ];
 		}
-		
-		// set language of the attachment
-		PLL()->model->post->set_language($tr_id, $new_lang);
-		
-		$translations = PLL()->model->post->get_translations($post_id);
-		if (!$translations && $lang = PLL()->model->post->get_language($post_id)) {
-			$translations[$lang->slug] = $post_id;
+
+		$new_id = $from_id;
+		$from = get_term( $from_id );
+
+		if ( $from instanceof WP_Term ) {
+			$data = get_object_vars( $from );
+			unset( $data['term_id'] );
+
+			if ( $data['parent'] ) {
+				$data['parent'] = $this->maybe_translate_term( $data['parent'], $lang );
+			}
+			if ( $data['slug'] ) {
+				$data['slug'] .= '-' . $lang;
+			}
+
+			// Remove unnecessary data.
+			$data = array_intersect_key( $data, array(
+				'alias_of'    => 1,
+				'description' => 1,
+				'parent'      => 1,
+				'slug'        => 1,
+			) );
+
+			$new = wp_insert_term( $from->name . ' ' . $lang, $from->taxonomy, $data );
+
+			if ( ! empty( $new['term_id'] ) ) {
+				$new_id = $new['term_id'];
+				// Save the translations.
+				pll_set_term_language( $new_id, $lang );
+				$translations[ $lang ] = $new_id;
+				pll_save_post_translations( $translations );
+			}
 		}
-		$translations[$new_lang] = $tr_id;
-		PLL()->model->post->save_translations($tr_id, $translations);
-		//$this->images_translated++;
-		return $tr_id; // newly translated attachment
+		return $new_id;
+	}
+
+	/**
+	 * Get the translated media ID, will auto-create a translation if needed.
+	 * @param  int     $from_id
+	 * @param  string  $lang
+	 * @param  array   $translations
+	 * @return int
+	 */
+	public function maybe_duplicate_media( $from_id, $lang, $translations = array() ) {
+
+		if ( 'attachment' !== get_post_type( $from_id ) ) {
+			return $this->maybe_translate_post( $from_id, $lang, $translations );
+		}
+
+		if ( empty( $translations ) ) {
+			$translations = $this->get_obj_translations( $from_id, 'post_type' );
+		}
+		if ( ! empty( $translations[ $lang ] ) ) {
+			// Already translated.
+			return $translations[ $lang ];
+		}
+
+		// source -> polylang/modules/media/admin-advanced-media.php
+		$src_language = PLL()->model->post->get_language( $from_id );
+
+		$new_id = $from_id;
+
+		if ( ! empty( $src_language ) && $lang !== $src_language->slug ) {
+			$tr_id  = PLL()->filters_media->create_media_translation( $new_id, $lang );
+			$post   = get_post( $tr_id );
+			$new_id = $post->ID;
+			wp_maybe_generate_attachment_metadata( $post );
+		}
+		return $new_id;
 	}
 
 }
-
-$GLOBALS['pods_polylang_sync_meta'] = new Pods_Polylang_Sync_Meta();
