@@ -67,7 +67,7 @@ class Pods_Polylang_Sync_Meta
 		//add_filter( 'save_post', array( $this, 'maybe_sync_meta' ), 99999, 3 );
 
 		/**
-		 * Docs from Polylang:
+		 * -- Docs from Polylang --
 		 * Filter the custom fields to copy or synchronize
 		 *
 		 * @since 0.6
@@ -75,8 +75,8 @@ class Pods_Polylang_Sync_Meta
 		 *
 		 * @param array  $keys list of custom fields names
 		 * @param bool   $sync true if it is synchronization, false if it is a copy
-		 * @param int    $from id of the post from which we copy informations
-		 * @param int    $to   id of the post to which we paste informations
+		 * @param int    $from id of the post from which we copy information
+		 * @param int    $to   id of the post to which we paste information
 		 * @param string $lang language slug
 		 */
 		add_filter( 'pll_copy_post_metas', array( $this, 'maybe_sync_post_meta' ), 99999, 5 );
@@ -90,7 +90,7 @@ class Pods_Polylang_Sync_Meta
 	 * @param $key
 	 * @return mixed
 	 */
-	function get_pll_option( $key ) {
+	public function get_pll_option( $key ) {
 		$options = PLL()->options;
 		return ( isset( $options[ $key ] ) ) ? $options[ $key ] : null;
 	}
@@ -155,11 +155,11 @@ class Pods_Polylang_Sync_Meta
 			case 'post':
 			case 'post_type':
 				return get_post_meta( $id );
-			break;
+				break;
 			case 'term':
 			case 'taxonomy':
 				return get_term_meta( $id );
-			break;
+				break;
 		}
 		return array();
 	}
@@ -195,11 +195,11 @@ class Pods_Polylang_Sync_Meta
 			case 'post':
 			case 'post_type':
 				return pll_get_post_translations( $id );
-			break;
+				break;
 			case 'term':
 			case 'taxonomy':
 				return pll_get_term_translations( $id );
-			break;
+				break;
 		}
 		return array();
 	}
@@ -215,11 +215,11 @@ class Pods_Polylang_Sync_Meta
 			case 'post':
 			case 'post_type':
 				return update_post_meta( $id, $key, $value, $prev );
-			break;
+				break;
 			case 'term':
 			case 'taxonomy':
 				return update_term_meta( $id, $key, $value, $prev );
-			break;
+				break;
 		}
 		return null;
 	}
@@ -235,19 +235,19 @@ class Pods_Polylang_Sync_Meta
 				if ( pll_is_translated_post_type( pods_v( 'name', $pod, '' ) ) ) {
 					return true;
 				}
-			break;
+				break;
 			case 'term':
 			case 'taxonomy':
 				if ( pll_is_translated_taxonomy( pods_v( 'name', $pod, '' ) ) ) {
 					return true;
 				}
-			break;
+				break;
 			case 'media':
 			case 'attachment':
 				if ( $this->get_pll_option( 'media_support' ) ) {
 					return true;
 				}
-			break;
+				break;
 		}
 		return false;
 	}
@@ -330,6 +330,7 @@ class Pods_Polylang_Sync_Meta
 				unset( $keys[ $key ] );
 				continue;
 			}
+			// Only non-relationship keys are added to the "regular" keys, relationship types (file/pick) are removed.
 			switch( pods_v( 'type', $data, '' ) ) {
 				case 'file':
 					$file_meta[] = $key;
@@ -362,7 +363,7 @@ class Pods_Polylang_Sync_Meta
 	 * @param int    $to
 	 * @param string $to_lang
 	 */
-	function sync_meta_translations( $metas, $sync, $from, $to, $to_lang = '' ) {
+	protected function sync_meta_translations( $metas, $sync, $from, $to, $to_lang = '' ) {
 		/*if ( $sync !== true ) {
 			return;
 		}
@@ -445,7 +446,13 @@ class Pods_Polylang_Sync_Meta
 
 	}
 
-	function get_meta_translations( $meta_val, $lang, $pod_field ) {
+	/**
+	 * @param  int|int[]  $meta_val
+	 * @param  string     $lang
+	 * @param  array      $pod_field
+	 * @return array|mixed|null
+	 */
+	public function get_meta_translations( $meta_val, $lang, $pod_field ) {
 		if ( ! $this->is_field_sync_enabled( $pod_field ) ) {
 			return null;
 		}
@@ -565,9 +572,9 @@ class Pods_Polylang_Sync_Meta
 
 	/**
 	 * Get the translated term ID, will auto-create a translation if needed.
-	 * @param int    $from_id
-	 * @param string $lang
-	 * @param array  $translations
+	 * @param  int     $from_id
+	 * @param  string  $lang
+	 * @param  array   $translations
 	 * @return int|null
 	 */
 	public function maybe_translate_term( $from_id, $lang, $translations = array() ) {
@@ -617,9 +624,9 @@ class Pods_Polylang_Sync_Meta
 
 	/**
 	 * Get the translated media ID, will auto-create a translation if needed.
-	 * @param int    $from_id
-	 * @param string $lang
-	 * @param array  $translations
+	 * @param  int     $from_id
+	 * @param  string  $lang
+	 * @param  array   $translations
 	 * @return int
 	 */
 	public function maybe_duplicate_media( $from_id, $lang, $translations = array() ) {
