@@ -3,7 +3,7 @@
  * Requires: Pods and Polylang 1.8+
  *
  * Plugin Name: Pods Polylang Sync Meta
- * Plugin URI:
+ * Plugin URI: https://github.com/JoryHogeveen/pods-polylang-sync-meta/
  * Version: 0.2
  * Author: Jory Hogeveen
  * Author uri: https://www.keraweb.nl
