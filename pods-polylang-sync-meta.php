@@ -1,6 +1,6 @@
 <?php
 /**
- * Requires: Pods and Polylang 1.8+
+ * Requires: Pods and Polylang 1.9.2+
  *
  * Plugin Name: Pods Polylang Sync Meta
  * Plugin URI: https://github.com/JoryHogeveen/pods-polylang-sync-meta/
