@@ -420,7 +420,11 @@ class Pods_Polylang_Sync_Meta
 					// @todo Remove?? This is handled by Polylang: Fix for thumbnail (get_posts_custom returns all serialized)
 					if ( '_thumbnail_id' === $meta && isset( $translation_meta[0] ) ) {
 						$translation_meta = $translation_meta[0];
+					}
 
+					// Fix for single rel fields.
+					if ( is_array( $translation_meta ) && 1 === count( $translation_meta ) ) {
+						$translation_meta = reset( $translation_meta );
 					}
 
 					// http://pods.io/docs/code/pods/save/
