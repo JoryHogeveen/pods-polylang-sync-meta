@@ -167,6 +167,26 @@ class Pods_Polylang_Sync_Meta
 	/**
 	 * @param int    $id
 	 * @param string $type
+	 * @return string
+	 */
+	public function get_obj_language( $id, $field = 'slug', $type = '' ) {
+		$type = ( $type ) ? $type : $this->get_pod_type();
+		switch( $type ) {
+			case 'post':
+			case 'post_type':
+				return pll_get_post_language( $id, $field );
+				break;
+			case 'term':
+			case 'taxonomy':
+				return pll_get_term_language( $id, $field );
+				break;
+		}
+		return '';
+	}
+
+	/**
+	 * @param int    $id
+	 * @param string $type
 	 * @return array
 	 */
 	public function get_obj_translations( $id, $type = '' ) {
@@ -349,8 +369,11 @@ class Pods_Polylang_Sync_Meta
 		if ( ! in_array( get_post_type( $to ), $this->sync_post_types ) ) {
 			return;
 		}*/
-		// @todo Terms
-		$cur_lang = pll_get_post_language( $to, 'slug' );
+
+		$cur_lang = $this->get_obj_language( $from );
+		if ( ! $cur_lang ) {
+			return;
+		}
 
 		// @todo TEMP, only sync from default language!
 		/*if ( pll_default_language() != $cur_lang ) {
