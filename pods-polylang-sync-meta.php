@@ -515,6 +515,7 @@ class Pods_Polylang_Sync_Meta
 		// Loop through all meta values.
 		$new_meta_val = array();
 		foreach( $meta_val as $rel_id ) {
+
 			// Get the translations.
 			$translations = $this->get_obj_translations( $rel_id, $type );
 			if ( ! empty( $translations[ $lang ] ) ) {
@@ -591,6 +592,11 @@ class Pods_Polylang_Sync_Meta
 		$from = get_post( $from_id );
 
 		if ( $from instanceof WP_Post ) {
+
+			if ( ! $this->is_translation_enabled( $from ) ) {
+				return $from_id;
+			}
+
 			$data = get_object_vars( $from );
 
 			unset( $data['ID'] );
@@ -632,6 +638,11 @@ class Pods_Polylang_Sync_Meta
 		$from = get_term( $from_id );
 
 		if ( $from instanceof WP_Term ) {
+
+			if ( ! $this->is_translation_enabled( $from ) ) {
+				return $from_id;
+			}
+
 			$data = get_object_vars( $from );
 			unset( $data['term_id'] );
 
@@ -671,9 +682,14 @@ class Pods_Polylang_Sync_Meta
 	 * @return int
 	 */
 	public function maybe_duplicate_media( $from_id, $lang, $translations = array() ) {
+		$type = 'attachment';
 
-		if ( 'attachment' !== get_post_type( $from_id ) ) {
+		if ( $type !== get_post_type( $from_id ) ) {
 			return $this->maybe_translate_post( $from_id, $lang, $translations );
+		}
+
+		if ( ! $this->is_translation_enabled( $from_id, $type ) ) {
+			return $from_id;
 		}
 
 		if ( empty( $translations ) ) {
