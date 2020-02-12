@@ -317,7 +317,10 @@ class Pods_Polylang_Sync_Meta
 	 * @return mixed
 	 */
 	public function maybe_sync_post_meta( $keys, $sync, $from, $to, $lang ) {
-		return $this->maybe_sync_meta( 'post', $keys, $sync, $from, $to, $lang );
+		remove_filter( 'pll_copy_post_metas', array( $this, 'maybe_sync_post_meta' ), 99999 );
+		$return = $this->maybe_sync_meta( 'post', $keys, $sync, $from, $to, $lang );
+		add_filter( 'pll_copy_post_metas', array( $this, 'maybe_sync_post_meta' ), 99999, 5 );
+		return $return;
 	}
 
 	/**
@@ -329,7 +332,10 @@ class Pods_Polylang_Sync_Meta
 	 * @return mixed
 	 */
 	public function maybe_sync_term_meta( $keys, $sync, $from, $to, $lang ) {
-		return $this->maybe_sync_meta( 'term', $keys, $sync, $from, $to, $lang );
+		remove_filter( 'pll_copy_term_metas', array( $this, 'maybe_sync_term_meta' ), 99999 );
+		$return = $this->maybe_sync_meta( 'term', $keys, $sync, $from, $to, $lang );
+		add_filter( 'pll_copy_term_metas', array( $this, 'maybe_sync_term_meta' ), 99999, 5 );
+		return $return;
 	}
 
 	/**
