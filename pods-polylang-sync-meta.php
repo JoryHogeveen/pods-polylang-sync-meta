@@ -227,20 +227,59 @@ class Pods_Polylang_Sync_Meta
 	}
 
 	/**
-	 * @param array $pod
+	 * @param  int|object|array $type
+	 * @param  string           $obj_type
 	 * @return bool
 	 */
-	public function is_translation_enabled( $pod ) {
-		switch( $this->get_pod_type( $pod ) ) {
+	public function is_translation_enabled( $type, $obj_type = null ) {
+		if ( ! is_scalar( $type ) ) {
+			if ( $type instanceof WP_Post ) {
+				$obj_type = 'post_type';
+				$type     = $type->post_type;
+			} elseif ( $type instanceof WP_Post_Type ) {
+				$obj_type = 'post_type';
+				$type     = $type->name;
+			} elseif ( $type instanceof WP_Term ) {
+				$obj_type = 'taxonomy';
+				$type     = $type->taxonomy;
+			} elseif ( $type instanceof WP_Taxonomy ) {
+				$obj_type = 'taxonomy';
+				$type     = $type->name;
+			} else {
+				// Pods.
+				$obj_type = $this->get_pod_type( $type );
+				$type     = pods_v( 'name', $type, '' );
+			}
+		}
+
+		if ( 'attachment' === $type ) {
+			$obj_type = $type;
+		}
+
+		switch( $obj_type ) {
 			case 'post':
 			case 'post_type':
-				if ( pll_is_translated_post_type( pods_v( 'name', $pod, '' ) ) ) {
+				if ( is_numeric( $type ) ) {
+					$post = get_post( $type );
+					if ( ! $post ) {
+						return false;
+					}
+					$type = $post->post_type;
+				}
+				if ( pll_is_translated_post_type( $type ) ) {
 					return true;
 				}
 				break;
 			case 'term':
 			case 'taxonomy':
-				if ( pll_is_translated_taxonomy( pods_v( 'name', $pod, '' ) ) ) {
+				if ( is_numeric( $type ) ) {
+					$term = get_term( $type );
+					if ( ! $term ) {
+						return false;
+					}
+					$type = $term->taxonomy;
+				}
+				if ( pll_is_translated_taxonomy( $type ) ) {
 					return true;
 				}
 				break;
