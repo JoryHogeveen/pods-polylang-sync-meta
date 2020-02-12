@@ -4,7 +4,7 @@
  *
  * Plugin Name: Pods Polylang Sync Meta
  * Plugin URI: https://github.com/JoryHogeveen/pods-polylang-sync-meta/
- * Version: 0.2.1
+ * Version: 0.2.2
  * Author: Jory Hogeveen
  * Author uri: https://www.keraweb.nl
  * Description: Syncs relationship meta fields and automatically creates translation if this is needed
@@ -227,20 +227,59 @@ class Pods_Polylang_Sync_Meta
 	}
 
 	/**
-	 * @param array $pod
+	 * @param  int|object|array $type
+	 * @param  string           $obj_type
 	 * @return bool
 	 */
-	public function is_translation_enabled( $pod ) {
-		switch( $this->get_pod_type( $pod ) ) {
+	public function is_translation_enabled( $type, $obj_type = null ) {
+		if ( ! is_scalar( $type ) ) {
+			if ( $type instanceof WP_Post ) {
+				$obj_type = 'post_type';
+				$type     = $type->post_type;
+			} elseif ( $type instanceof WP_Post_Type ) {
+				$obj_type = 'post_type';
+				$type     = $type->name;
+			} elseif ( $type instanceof WP_Term ) {
+				$obj_type = 'taxonomy';
+				$type     = $type->taxonomy;
+			} elseif ( $type instanceof WP_Taxonomy ) {
+				$obj_type = 'taxonomy';
+				$type     = $type->name;
+			} else {
+				// Pods.
+				$obj_type = $this->get_pod_type( $type );
+				$type     = pods_v( 'name', $type, '' );
+			}
+		}
+
+		if ( 'attachment' === $type ) {
+			$obj_type = $type;
+		}
+
+		switch( $obj_type ) {
 			case 'post':
 			case 'post_type':
-				if ( pll_is_translated_post_type( pods_v( 'name', $pod, '' ) ) ) {
+				if ( is_numeric( $type ) ) {
+					$post = get_post( $type );
+					if ( ! $post ) {
+						return false;
+					}
+					$type = $post->post_type;
+				}
+				if ( pll_is_translated_post_type( $type ) ) {
 					return true;
 				}
 				break;
 			case 'term':
 			case 'taxonomy':
-				if ( pll_is_translated_taxonomy( pods_v( 'name', $pod, '' ) ) ) {
+				if ( is_numeric( $type ) ) {
+					$term = get_term( $type );
+					if ( ! $term ) {
+						return false;
+					}
+					$type = $term->taxonomy;
+				}
+				if ( pll_is_translated_taxonomy( $type ) ) {
 					return true;
 				}
 				break;
@@ -278,7 +317,10 @@ class Pods_Polylang_Sync_Meta
 	 * @return mixed
 	 */
 	public function maybe_sync_post_meta( $keys, $sync, $from, $to, $lang ) {
-		return $this->maybe_sync_meta( 'post', $keys, $sync, $from, $to, $lang );
+		remove_filter( 'pll_copy_post_metas', array( $this, 'maybe_sync_post_meta' ), 99999 );
+		$return = $this->maybe_sync_meta( 'post', $keys, $sync, $from, $to, $lang );
+		add_filter( 'pll_copy_post_metas', array( $this, 'maybe_sync_post_meta' ), 99999, 5 );
+		return $return;
 	}
 
 	/**
@@ -290,7 +332,10 @@ class Pods_Polylang_Sync_Meta
 	 * @return mixed
 	 */
 	public function maybe_sync_term_meta( $keys, $sync, $from, $to, $lang ) {
-		return $this->maybe_sync_meta( 'term', $keys, $sync, $from, $to, $lang );
+		remove_filter( 'pll_copy_term_metas', array( $this, 'maybe_sync_term_meta' ), 99999 );
+		$return = $this->maybe_sync_meta( 'term', $keys, $sync, $from, $to, $lang );
+		add_filter( 'pll_copy_term_metas', array( $this, 'maybe_sync_term_meta' ), 99999, 5 );
+		return $return;
 	}
 
 	/**
@@ -476,6 +521,7 @@ class Pods_Polylang_Sync_Meta
 		// Loop through all meta values.
 		$new_meta_val = array();
 		foreach( $meta_val as $rel_id ) {
+
 			// Get the translations.
 			$translations = $this->get_obj_translations( $rel_id, $type );
 			if ( ! empty( $translations[ $lang ] ) ) {
@@ -552,6 +598,11 @@ class Pods_Polylang_Sync_Meta
 		$from = get_post( $from_id );
 
 		if ( $from instanceof WP_Post ) {
+
+			if ( ! $this->is_translation_enabled( $from ) ) {
+				return $from_id;
+			}
+
 			$data = get_object_vars( $from );
 
 			unset( $data['ID'] );
@@ -593,6 +644,11 @@ class Pods_Polylang_Sync_Meta
 		$from = get_term( $from_id );
 
 		if ( $from instanceof WP_Term ) {
+
+			if ( ! $this->is_translation_enabled( $from ) ) {
+				return $from_id;
+			}
+
 			$data = get_object_vars( $from );
 			unset( $data['term_id'] );
 
@@ -632,9 +688,14 @@ class Pods_Polylang_Sync_Meta
 	 * @return int
 	 */
 	public function maybe_duplicate_media( $from_id, $lang, $translations = array() ) {
+		$type = 'attachment';
 
-		if ( 'attachment' !== get_post_type( $from_id ) ) {
+		if ( $type !== get_post_type( $from_id ) ) {
 			return $this->maybe_translate_post( $from_id, $lang, $translations );
+		}
+
+		if ( ! $this->is_translation_enabled( $from_id, $type ) ) {
+			return $from_id;
 		}
 
 		if ( empty( $translations ) ) {
