@@ -711,6 +711,8 @@ class Pods_Polylang_Sync_Meta
 
 		// source -> polylang/modules/media/admin-advanced-media.php
 		$src_language = PLL()->model->post->get_language( $from_id );
+		// Make sure metadata exists.
+		wp_maybe_generate_attachment_metadata( get_post( $from_id ) );
 
 		$new_id = $from_id;
 
