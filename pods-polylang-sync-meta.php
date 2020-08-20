@@ -516,6 +516,9 @@ class Pods_Polylang_Sync_Meta
 			$type = 'post_type';
 		} elseif ( 'pick' === pods_v( 'type', $pod_field, '' ) ) {
 			$type = pods_v( 'pick_object', $pod_field, '' );
+			if ( 'media' === $type || 'attachment' === $type ) {
+				$type = 'post_type';
+			}
 		}
 
 		// Loop through all meta values.
