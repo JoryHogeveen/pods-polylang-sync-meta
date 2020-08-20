@@ -435,11 +435,6 @@ class Pods_Polylang_Sync_Meta
 			return;
 		}*/
 
-		if ( isset( PLL()->advanced_media ) ) {
-			// Fix for Polylang Pro -> polylang/modules/media/admin-advanced-media.php // classname: PLL_Admin_Advanced_Media
-			remove_action( 'add_attachment', array( PLL()->advanced_media, 'duplicate_media' ), 20 ); // After default add (20)
-		}
-
 		$obj_meta = $this->get_obj_metadata( $from ); // Get metadata from post.
 
 		if ( $to_lang && $to ) {
@@ -493,11 +488,6 @@ class Pods_Polylang_Sync_Meta
 			//}
 		}
 
-		if ( isset( PLL()->advanced_media ) ) {
-			// Fix for Polylang Pro -> polylang/modules/media/admin-advanced-media.php // classname: PLL_Admin_Advanced_Media
-			add_action( 'add_attachment', array( PLL()->advanced_media, 'duplicate_media' ), 20 ); // After default add (20)
-		}
-
 	}
 
 	/**
@@ -530,7 +520,7 @@ class Pods_Polylang_Sync_Meta
 
 		// Loop through all meta values.
 		$new_meta_val = array();
-		foreach( $meta_val as $rel_id ) {
+		foreach ( $meta_val as $rel_id ) {
 
 			// Get the translations.
 			$translations = $this->get_obj_translations( $rel_id, $type );
@@ -716,6 +706,8 @@ class Pods_Polylang_Sync_Meta
 			return $translations[ $lang ];
 		}
 
+		add_filter( 'pll_enable_duplicate_media', '__return_false', 99 );
+
 		// Make sure metadata exists.
 		wp_maybe_generate_attachment_metadata( get_post( $from_id ) );
 
@@ -727,7 +719,10 @@ class Pods_Polylang_Sync_Meta
 			if ( isset( PLL()->posts ) && is_callable( array( PLL()->posts, 'create_media_translation' ) ) ) {
 				$tr_id = PLL()->posts->create_media_translation( $new_id, $lang );
 			} elseif ( isset( PLL()->filters_media ) && is_callable( array( PLL()->filters_media, 'create_media_translation' ) ) ) {
+				// Fix for older Polylang Pro -> polylang/modules/media/admin-advanced-media.php // classname: PLL_Admin_Advanced_Media
+				remove_action( 'add_attachment', array( PLL()->advanced_media, 'duplicate_media' ), 20 ); // After default add (20)
 				$tr_id = PLL()->filters_media->create_media_translation( $new_id, $lang );
+				add_action( 'add_attachment', array( PLL()->advanced_media, 'duplicate_media' ), 20 ); // After default add (20)
 			}
 			if ( $tr_id ) {
 				$new_id = $tr_id;
@@ -738,6 +733,9 @@ class Pods_Polylang_Sync_Meta
 				}*/
 			}
 		}
+
+		remove_filter( 'pll_enable_duplicate_media', '__return_false', 99 );
+
 		return $new_id;
 	}
 
