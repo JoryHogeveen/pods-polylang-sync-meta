@@ -712,10 +712,19 @@ class Pods_Polylang_Sync_Meta
 		$new_id = $from_id;
 
 		if ( ! empty( $src_language ) && $lang !== $src_language->slug ) {
-			$tr_id  = PLL()->filters_media->create_media_translation( $new_id, $lang );
-			$post   = get_post( $tr_id );
-			$new_id = $post->ID;
-			wp_maybe_generate_attachment_metadata( $post );
+			if ( isset( PLL()->posts ) && is_callable( array( PLL()->posts, 'create_media_translation' ) ) ) {
+				$tr_id = PLL()->posts->create_media_translation( $new_id, $lang );
+			} elseif ( isset( PLL()->filters_media ) && is_callable( array( PLL()->filters_media, 'create_media_translation' ) ) ) {
+				$tr_id = PLL()->filters_media->create_media_translation( $new_id, $lang );
+			}
+			if ( $tr_id ) {
+				$new_id = $tr_id;
+				/*$post   = get_post( $tr_id );
+				$new_id = $post->ID;
+				if ( $post ) {
+					wp_maybe_generate_attachment_metadata( $post );
+				}*/
+			}
 		}
 		return $new_id;
 	}
