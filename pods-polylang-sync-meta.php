@@ -709,14 +709,14 @@ class Pods_Polylang_Sync_Meta
 			return $translations[ $lang ];
 		}
 
-		// source -> polylang/modules/media/admin-advanced-media.php
-		$src_language = PLL()->model->post->get_language( $from_id );
 		// Make sure metadata exists.
 		wp_maybe_generate_attachment_metadata( get_post( $from_id ) );
 
+		$src_language = pll_get_post_language( $from_id );
+
 		$new_id = $from_id;
 
-		if ( ! empty( $src_language ) && $lang !== $src_language->slug ) {
+		if ( ! empty( $src_language ) && $lang !== $src_language ) {
 			if ( isset( PLL()->posts ) && is_callable( array( PLL()->posts, 'create_media_translation' ) ) ) {
 				$tr_id = PLL()->posts->create_media_translation( $new_id, $lang );
 			} elseif ( isset( PLL()->filters_media ) && is_callable( array( PLL()->filters_media, 'create_media_translation' ) ) ) {
