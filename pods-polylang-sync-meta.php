@@ -153,17 +153,19 @@ class Pods_Polylang_Sync_Meta
 	 */
 	public function get_obj_metadata( $id, $type = '' ) {
 		$type = ( $type ) ? $type : $this->get_pod_type();
-		switch( $type ) {
+
+		$meta = array();
+		switch ( $type ) {
 			case 'post':
 			case 'post_type':
-				return get_post_meta( $id );
+				$meta = get_post_meta( $id );
 				break;
 			case 'term':
 			case 'taxonomy':
-				return get_term_meta( $id );
+				$meta = get_term_meta( $id );
 				break;
 		}
-		return array();
+		return $meta;
 	}
 
 	/**
@@ -173,17 +175,19 @@ class Pods_Polylang_Sync_Meta
 	 */
 	public function get_obj_language( $id, $field = 'slug', $type = '' ) {
 		$type = ( $type ) ? $type : $this->get_pod_type();
-		switch( $type ) {
+
+		$lang = '';
+		switch ( $type ) {
 			case 'post':
 			case 'post_type':
-				return pll_get_post_language( $id, $field );
+				$lang = pll_get_post_language( $id, $field );
 				break;
 			case 'term':
 			case 'taxonomy':
-				return pll_get_term_language( $id, $field );
+				$lang = pll_get_term_language( $id, $field );
 				break;
 		}
-		return '';
+		return $lang;
 	}
 
 	/**
@@ -193,17 +197,19 @@ class Pods_Polylang_Sync_Meta
 	 */
 	public function get_obj_translations( $id, $type = '' ) {
 		$type = ( $type ) ? $type : $this->get_pod_type();
-		switch( $type ) {
+
+		$translations = array();
+		switch ( $type ) {
 			case 'post':
 			case 'post_type':
-				return pll_get_post_translations( $id );
+				$translations = pll_get_post_translations( $id );
 				break;
 			case 'term':
 			case 'taxonomy':
-				return pll_get_term_translations( $id );
+				$translations = pll_get_term_translations( $id );
 				break;
 		}
-		return array();
+		return $translations;
 	}
 
 	/**
@@ -213,17 +219,19 @@ class Pods_Polylang_Sync_Meta
 	 */
 	public function update_obj_meta( $id, $key, $value, $prev = '', $type = '' ) {
 		$type = ( $type ) ? $type : $this->get_pod_type();
-		switch( $type ) {
+
+		$success = null;
+		switch ( $type ) {
 			case 'post':
 			case 'post_type':
-				return update_post_meta( $id, $key, $value, $prev );
+				$success = update_post_meta( $id, $key, $value, $prev );
 				break;
 			case 'term':
 			case 'taxonomy':
-				return update_term_meta( $id, $key, $value, $prev );
+				$success = update_term_meta( $id, $key, $value, $prev );
 				break;
 		}
-		return null;
+		return $success;
 	}
 
 	/**
@@ -256,7 +264,7 @@ class Pods_Polylang_Sync_Meta
 			$obj_type = $type;
 		}
 
-		switch( $obj_type ) {
+		switch ( $obj_type ) {
 			case 'post':
 			case 'post_type':
 				if ( is_numeric( $type ) ) {
@@ -350,8 +358,7 @@ class Pods_Polylang_Sync_Meta
 
 		if ( 'post' === $type && get_post( $from ) ) {
 			$this->cur_pod = pods( get_post_type( $from ), $from );
-		}
-		elseif ( 'term' === $type && $obj = get_term( $from ) ) {
+		} elseif ( 'term' === $type && $obj = get_term( $from ) ) {
 			$this->cur_pod = pods( $obj->taxonomy, $from );
 		}
 		/*elseif ( get_user_by( 'ID', $from ) ) {
@@ -368,7 +375,7 @@ class Pods_Polylang_Sync_Meta
 			return $keys;
 		}
 
-		$fields = $this->cur_pod->fields();
+		$fields    = $this->cur_pod->fields();
 		$file_meta = array();
 		$pick_meta = array();
 		foreach ( $fields as $key => $data ) {
@@ -378,7 +385,7 @@ class Pods_Polylang_Sync_Meta
 				continue;
 			}
 			// Only non-relationship keys are added to the "regular" keys, relationship types (file/pick) are removed.
-			switch( pods_v( 'type', $data, '' ) ) {
+			switch ( pods_v( 'type', $data, '' ) ) {
 				case 'file':
 					$file_meta[] = $key;
 					unset( $keys[ $key ] );
@@ -598,7 +605,7 @@ class Pods_Polylang_Sync_Meta
 		}
 
 		$new_id = $from_id;
-		$from = get_post( $from_id );
+		$from   = get_post( $from_id );
 
 		if ( $from instanceof WP_Post ) {
 
@@ -644,7 +651,7 @@ class Pods_Polylang_Sync_Meta
 		}
 
 		$new_id = $from_id;
-		$from = get_term( $from_id );
+		$from   = get_term( $from_id );
 
 		if ( $from instanceof WP_Term ) {
 
