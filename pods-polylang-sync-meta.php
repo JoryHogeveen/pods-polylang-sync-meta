@@ -537,7 +537,7 @@ class Pods_Polylang_Sync_Meta
 						// create attachment translation.
 						//$attachment = get_post( $rel_id );
 						//$new_meta_val[] = $this->translate_attachment( $rel_id, $lang, $attachment->post_parent );
-						$new_meta_val[] = $this->maybe_duplicate_media( $rel_id, $lang );
+						$new_meta_val[] = $this->maybe_translate_media( $rel_id, $lang );
 					} else {
 						// @todo Create new post??
 						$new_meta_val[] = $this->maybe_translate_post( $rel_id, $lang, $translations );
@@ -687,7 +687,7 @@ class Pods_Polylang_Sync_Meta
 	 * @param  array   $translations
 	 * @return int
 	 */
-	public function maybe_duplicate_media( $from_id, $lang, $translations = array() ) {
+	public function maybe_translate_media( $from_id, $lang, $translations = array() ) {
 		$type = 'attachment';
 
 		if ( $type !== get_post_type( $from_id ) ) {
