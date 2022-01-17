@@ -4,7 +4,7 @@
  *
  * Plugin Name: Pods Polylang Sync Meta
  * Plugin URI: https://github.com/JoryHogeveen/pods-polylang-sync-meta/
- * Version: 0.2.2
+ * Version: 0.2.3
  * Author: Jory Hogeveen
  * Author uri: https://www.keraweb.nl
  * Description: Syncs relationship meta fields and automatically creates translation if this is needed
@@ -111,16 +111,39 @@ class Pods_Polylang_Sync_Meta
 				return $options;
 			}
 
-			$options['advanced'][ __( 'Polylang', self::DOMAIN ) ] = array(
-				$this->pod_field_sync_option => array(
+			$pod_major_version = substr( PODS_VERSION, 0, 3 );
+
+			if ( version_compare( $pod_major_version, '2.8', '>=' ) ) {
+
+				$options['advanced']['polylang'] = array(
+					'name' => 'polylang',
+					'label' => __( 'Polylang', self::DOMAIN ),
+					'type' => 'heading',
+				);
+
+				$options['advanced'][ $this->pod_field_sync_option ] = array(
 					'label' => __( 'Enable meta field sync', self::DOMAIN ),
+					'name'  => $this->pod_field_sync_option,
 					'type'  => 'boolean',
 					'help'  => '',
 					/*'depends-on' => array(
 						'type' => $analysis_field_types,
 					),*/
-				),
-			);
+				);
+
+			} else {
+				// Pre 2.8.
+				$options['advanced'][ __( 'Polylang', self::DOMAIN ) ] = array(
+					$this->pod_field_sync_option => array(
+						'label' => __( 'Enable meta field sync', self::DOMAIN ),
+						'type'  => 'boolean',
+						'help'  => '',
+						/*'depends-on' => array(
+							'type' => $analysis_field_types,
+						),*/
+					),
+				);
+			}
 		}
 		return $options;
 	}
