@@ -37,12 +37,12 @@ class Admin extends Data
 
 				$options['advanced']['polylang'] = array(
 					'name' => 'polylang',
-					'label' => __( 'Polylang', self::DOMAIN ),
+					'label' => __( 'Polylang', \Pods_Polylang_Sync_Meta::DOMAIN ),
 					'type' => 'heading',
 				);
 
 				$options['advanced'][ $this->pod_field_sync_option ] = array(
-					'label' => __( 'Enable meta field sync', self::DOMAIN ),
+					'label' => __( 'Enable meta field sync', \Pods_Polylang_Sync_Meta::DOMAIN ),
 					'name'  => $this->pod_field_sync_option,
 					'type'  => 'boolean',
 					'help'  => '',
@@ -53,9 +53,9 @@ class Admin extends Data
 
 			} else {
 				// Pre 2.8.
-				$options['advanced'][ __( 'Polylang', self::DOMAIN ) ] = array(
+				$options['advanced'][ __( 'Polylang', \Pods_Polylang_Sync_Meta::DOMAIN ) ] = array(
 					$this->pod_field_sync_option => array(
-						'label' => __( 'Enable meta field sync', self::DOMAIN ),
+						'label' => __( 'Enable meta field sync', \Pods_Polylang_Sync_Meta::DOMAIN ),
 						'type'  => 'boolean',
 						'help'  => '',
 						/*'depends-on' => array(
