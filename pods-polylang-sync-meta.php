@@ -142,8 +142,7 @@ class Pods_Polylang_Sync_Meta
 	 * @return array
 	 */
 	public function filter_pll_copy_post_metas( $keys, $sync, $from, $to, $lang ) {
-		$post = get_post( $from );
-		$pod = pods( $post );
+		$pod = pods( get_post_type( $from ), $from );
 
 		if ( $pod->exists() ) {
 			return $this->remove_pods_meta_keys( $keys, $pod );
@@ -162,7 +161,7 @@ class Pods_Polylang_Sync_Meta
 	 */
 	public function filter_pll_copy_term_metas( $keys, $sync, $from, $to, $lang ) {
 		$term = get_term( $from );
-		$pod = pods( $term );
+		$pod = pods( $term->taxonomy, $term->term_id );
 
 		if ( $pod->exists() ) {
 			return $this->remove_pods_meta_keys( $keys, $pod );
@@ -197,8 +196,7 @@ class Pods_Polylang_Sync_Meta
 	 * @return mixed
 	 */
 	public function filter_pll_translate_post_metas( $value, $key, $lang, $from, $to ) {
-		$post = get_post( $from );
-		$pod = pods( $post );
+		$pod = pods( get_post_type( $from ), $from );
 
 		if ( $pod->exists() ) {
 			$value = $this->translate_meta( $value, $key, $pod, $lang );
@@ -217,7 +215,7 @@ class Pods_Polylang_Sync_Meta
 	 */
 	public function filter_pll_translate_term_metas( $value, $key, $lang, $from, $to ) {
 		$term = get_term( $from );
-		$pod = pods( $term );
+		$pod = pods( $term->taxonomy, $term->term_id );
 
 		if ( $pod->exists() ) {
 			$value = $this->translate_meta( $value, $key, $pod, $lang );
