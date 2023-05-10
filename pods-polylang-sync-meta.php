@@ -54,24 +54,10 @@ class Pods_Polylang_Sync_Meta
 	 */
 	public function init() {
 
-		// @todo Also run on front-end?
-		if ( ! is_admin() ) {
+		if ( ! $this->validate() ) {
 			return;
 		}
 
-		if (
-			! function_exists( 'PLL' )
-			|| ! property_exists( PLL(), 'model' )
-			|| ! property_exists( PLL(), 'filters_media' )
-			|| ! function_exists( 'pll_get_post_translations' )
-			|| ! function_exists( 'pll_is_translated_post_type' )
-			|| ! function_exists( 'pods' )
-		) {
-			return;
-		}
-
-		// @todo Redo save_post handler?
-		//add_filter( 'save_post', array( $this, 'maybe_sync_meta' ), 99999, 3 );
 		include 'classes/data.php';
 
 		/**
@@ -113,6 +99,31 @@ class Pods_Polylang_Sync_Meta
 
 		include 'classes/translator.php';
 		$this->translator = Pods_Polylang_Sync_Meta\Translator::get_instance();
+	}
+
+	/**
+	 * Check is the functionality should be activated.
+	 * @return bool
+	 */
+	public function validate() {
+
+		// @todo Also run on front-end?
+		if ( ! is_admin() ) {
+			return false;
+		}
+
+		if (
+			! function_exists( 'PLL' )
+			|| ! property_exists( PLL(), 'model' )
+			|| ! property_exists( PLL(), 'filters_media' )
+			|| ! function_exists( 'pll_get_post_translations' )
+			|| ! function_exists( 'pll_is_translated_post_type' )
+			|| ! function_exists( 'pods' )
+		) {
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
