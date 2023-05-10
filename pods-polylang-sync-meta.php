@@ -81,10 +81,41 @@ class Pods_Polylang_Sync_Meta
 		 * @param int    $to   id of the post to which we paste information
 		 * @param string $lang language slug
 		 */
-		add_filter( 'pll_copy_post_metas', array( $this, 'maybe_sync_post_meta' ), 99999, 5 );
-		add_filter( 'pll_copy_term_metas', array( $this, 'maybe_sync_term_meta' ), 99999, 5 );
+		add_filter( 'pll_copy_post_metas', array( $this, 'filter_pll_copy_post_metas' ), 99999, 5 );
+		add_filter( 'pll_copy_term_metas', array( $this, 'filter_pll_copy_term_metas' ), 99999, 5 );
 
 		add_filter( 'pods_admin_setup_edit_field_options', array( $this, 'pods_edit_field_options' ), 12, 2 );
+
+	public function filter_pll_copy_post_metas( $keys, $sync, $from, $to, $lang ) {
+		$post = get_post( $from );
+		$pod = pods( $post );
+
+		if ( $pod->exists() ) {
+			return $this->remove_pods_meta_keys( $keys, $pod );
+		}
+		return $keys;
+	}
+
+	public function filter_pll_copy_term_metas( $keys, $sync, $from, $to, $lang ) {
+		$term = get_term( $from );
+		$pod = pods( $term );
+
+		if ( $pod->exists() ) {
+			return $this->remove_pods_meta_keys( $keys, $pod );
+		}
+		return $keys;
+	}
+
+	public function remove_pods_meta_keys( $keys, $pod ) {
+
+		foreach ( $pod->fields() as $key => $data ) {
+			if ( ! $this->is_field_sync_enabled( $data ) ) {
+				// No options available or sync is turned off for this field.
+				unset( $keys[ $key ] );
+			}
+		}
+		return $keys;
+	}
 
 	}
 
