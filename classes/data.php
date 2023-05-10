@@ -6,6 +6,17 @@ abstract class Data
 {
 	public $pod_field_sync_option = 'pods_polylang_sync_meta';
 
+	public $translatable_field_types = array(
+		'pick',
+		'file',
+	);
+
+	public $translatable_pod_types = array(
+		'post_type',
+		'taxonomy',
+		'media',
+	);
+
 	/**
 	 * @param $key
 	 * @return mixed
@@ -204,5 +215,26 @@ abstract class Data
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * @param string|array|\Pods $pod
+	 *
+	 * @return bool
+	 */
+	public function is_pod_translatable( $pod ) {
+		$type = ( is_string( $pod ) ) ? $pod : $this->get_pod_type( $pod );
+
+		return in_array( $type, $this->translatable_pod_types, true );
+	}
+
+	/**
+	 * @param string|array|\Pods\Whatsit\Field $field
+	 * @return bool
+	 */
+	public function is_field_translatable( $field ) {
+		$type = ( is_string( $field ) ) ? $field : pods_v( 'type', $field, '' );
+
+		return in_array( $type, $this->translatable_field_types, true );
 	}
 }

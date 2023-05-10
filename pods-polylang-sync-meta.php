@@ -25,11 +25,6 @@ class Pods_Polylang_Sync_Meta
 
 	private static $instance = null;
 
-	public $translatable_field_types = array(
-		'pick',
-		'file',
-	);
-
 	/**
 	 * @var Pods_Polylang_Sync_Meta\Admin
 	 */
@@ -242,10 +237,7 @@ class Pods_Polylang_Sync_Meta
 
 		$field = $pod->fields( $key );
 		if ( $field && $this->translator()->is_field_sync_enabled( $field ) ) {
-			$field_type = pods_v( 'type', $field );
-			if ( in_array( $field_type, $this->translatable_field_types, true ) ) {
-				$value = $this->translator()->get_meta_translations( $value, $lang, $field );
-			}
+			$value = $this->translator()->get_meta_translations( $value, $lang, $field );
 		}
 
 		return $value;

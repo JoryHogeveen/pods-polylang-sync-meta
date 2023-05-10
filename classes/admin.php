@@ -24,7 +24,7 @@ class Admin extends Data
 	 */
 	public function pods_edit_field_options( $options, $pod ) {
 
-		if ( in_array( $this->get_pod_type( $pod ), array( 'post_type', 'taxonomy', 'media' ) ) ) {
+		if ( $this->is_pod_translatable( $pod ) ) {
 			//$analysis_field_types = $this->get_sync_field_types();
 
 			if ( ! $this->is_translation_enabled( $pod ) ) {
