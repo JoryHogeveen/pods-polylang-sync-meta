@@ -63,15 +63,15 @@ class Translator extends Data
 						// create attachment translation.
 						//$attachment = get_post( $rel_id );
 						//$new_meta_val[] = $this->translate_attachment( $rel_id, $lang, $attachment->post_parent );
-						$new_meta_val[] = $this->maybe_translate_media( $rel_id, $lang );
+						$new_meta_val[] = $this->get_media_translation( $rel_id, $lang );
 					} else {
 						// @todo Create new post??
-						$new_meta_val[] = $this->maybe_translate_post( $rel_id, $lang, $translations );
+						$new_meta_val[] = $this->get_post_translation( $rel_id, $lang, $translations );
 					}
 
 				} elseif ( 'taxonomy' === $type ) {
 					// @todo Create new term??
-					$new_meta_val[] = $this->maybe_translate_term( $rel_id, $lang, $translations );
+					$new_meta_val[] = $this->get_term_translation( $rel_id, $lang, $translations );
 				} else {
 					// Just use regular one
 					$new_meta_val[] = $rel_id;
@@ -97,7 +97,7 @@ class Translator extends Data
 	 * @param array  $translations
 	 * @return int|null
 	 */
-	public function maybe_translate_post( $from_id, $lang, $translations = array() ) {
+	public function get_post_translation( $from_id, $lang, $translations = array() ) {
 
 		$new_id = $from_id;
 		$from   = get_post( $from_id );
@@ -123,7 +123,7 @@ class Translator extends Data
 
 			// Get parent translation.
 			if ( $data['parent'] ) {
-				$data['parent'] = $this->maybe_translate_post( $data['parent'], $lang );
+				$data['parent'] = $this->get_post_translation( $data['parent'], $lang );
 			}
 
 			$new_id = wp_insert_post( $data );
@@ -143,7 +143,7 @@ class Translator extends Data
 	 * @param  array   $translations
 	 * @return int|null
 	 */
-	public function maybe_translate_term( $from_id, $lang, $translations = array() ) {
+	public function get_term_translation( $from_id, $lang, $translations = array() ) {
 
 		$new_id = $from_id;
 		$from   = get_term( $from_id );
@@ -166,7 +166,7 @@ class Translator extends Data
 			unset( $data['term_id'] );
 
 			if ( $data['parent'] ) {
-				$data['parent'] = $this->maybe_translate_term( $data['parent'], $lang );
+				$data['parent'] = $this->get_term_translation( $data['parent'], $lang );
 			}
 			if ( $data['slug'] ) {
 				$data['slug'] .= '-' . $lang;
@@ -200,7 +200,7 @@ class Translator extends Data
 	 * @param  array   $translations
 	 * @return int
 	 */
-	public function maybe_translate_media( $from_id, $lang, $translations = array() ) {
+	public function get_media_translation( $from_id, $lang, $translations = array() ) {
 		$type = 'attachment';
 		$attachment = get_post( $from_id );
 
