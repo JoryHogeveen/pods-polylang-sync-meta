@@ -29,6 +29,11 @@ class Pods_Polylang_Sync_Meta
 	//public $sync_post_types = array( 'product' ); //'post', 'page',
 	public $pod_field_sync_option = 'pods_polylang_sync_meta';
 
+	public $translatable_field_types = array(
+		'pick',
+		'file',
+	);
+
 	/**
 	 * @var Pods
 	 */
@@ -84,6 +89,21 @@ class Pods_Polylang_Sync_Meta
 		add_filter( 'pll_copy_post_metas', array( $this, 'filter_pll_copy_post_metas' ), 99999, 5 );
 		add_filter( 'pll_copy_term_metas', array( $this, 'filter_pll_copy_term_metas' ), 99999, 5 );
 
+		/**
+		 * -- Docs from Polylang --
+		 * Filter a meta value before is copied or synchronized
+		 *
+		 * @since 2.3
+		 *
+		 * @param mixed  $value Meta value
+		 * @param string $key   Meta key
+		 * @param string $lang  Language of target
+		 * @param int    $from  Id of the source
+		 * @param int    $to    Id of the target
+		 */
+		add_filter( 'pll_translate_post_metas', array( $this, 'filter_pll_translate_post_metas' ), 99999, 5 );
+		add_filter( 'pll_translate_term_metas', array( $this, 'filter_pll_translate_term_metas' ), 99999, 5 );
+
 		add_filter( 'pods_admin_setup_edit_field_options', array( $this, 'pods_edit_field_options' ), 12, 2 );
 
 	public function filter_pll_copy_post_metas( $keys, $sync, $from, $to, $lang ) {
@@ -117,6 +137,37 @@ class Pods_Polylang_Sync_Meta
 		return $keys;
 	}
 
+	public function filter_pll_translate_post_metas( $value, $key, $lang, $from, $to ) {
+		$post = get_post( $from );
+		$pod = pods( $post );
+
+		if ( $pod->exists() ) {
+			$value = $this->translate_meta( $value, $key, $pod, $lang, $from, $to );
+		}
+		return $value;
+	}
+
+	public function filter_pll_translate_post_metas( $value, $key, $lang, $from, $to ) {
+		$term = get_term( $from );
+		$pod = pods( $term );
+
+		if ( $pod->exists() ) {
+			$value = $this->translate_meta( $value, $key, $pod, $lang, $from, $to );
+		}
+		return $value;
+	}
+
+	public function translate_meta( $value, $key, $pod, $lang, $from, $to ) {
+
+		$field = $pod->fields( $key );
+		if ( $field && $this->is_field_sync_enabled( $field ) ) {
+			$field_type = pods_v( 'type', $field );
+			if ( in_array( $field_type, $this->translatable_field_types, true ) ) {
+				$value = $this->get_meta_translations( $value, $lang, $field );
+			}
+		}
+
+		return $value;
 	}
 
 	/**
