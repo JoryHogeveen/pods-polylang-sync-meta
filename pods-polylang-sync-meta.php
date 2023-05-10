@@ -63,6 +63,12 @@ class Pods_Polylang_Sync_Meta
 		include 'classes/data.php';
 
 		/**
+		 * Admin options.
+		 */
+		include 'classes/admin.php';
+		$this->admin = Pods_Polylang_Sync_Meta\Admin::get_instance();
+
+		/**
 		 * -- Docs from Polylang --
 		 * Filter the custom fields to copy or synchronize
 		 *
@@ -92,15 +98,6 @@ class Pods_Polylang_Sync_Meta
 		 */
 		add_filter( 'pll_translate_post_metas', array( $this, 'filter_pll_translate_post_metas' ), 99999, 5 );
 		add_filter( 'pll_translate_term_metas', array( $this, 'filter_pll_translate_term_metas' ), 99999, 5 );
-
-		/**
-		 * Admin options.
-		 */
-		include 'classes/admin.php';
-		$this->admin = Pods_Polylang_Sync_Meta\Admin::get_instance();
-
-		include 'classes/translator.php';
-		$this->translator = Pods_Polylang_Sync_Meta\Translator::get_instance();
 	}
 
 	/**
@@ -126,6 +123,18 @@ class Pods_Polylang_Sync_Meta
 		}
 
 		return true;
+	}
+
+	/**
+	 * Gets the translator class.
+	 * @return \Pods_Polylang_Sync_Meta\Translator|null
+	 */
+	public function translator() {
+		if ( ! $this->translator ) {
+			include 'classes/translator.php';
+			$this->translator = Pods_Polylang_Sync_Meta\Translator::get_instance();
+		}
+		return $this->translator;
 	}
 
 	/**
@@ -175,7 +184,7 @@ class Pods_Polylang_Sync_Meta
 	public function remove_pods_meta_keys( $keys, $pod ) {
 
 		foreach ( $pod->fields() as $key => $data ) {
-			if ( ! $this->sync->is_field_sync_enabled( $data ) ) {
+			if ( ! $this->translator()->is_field_sync_enabled( $data ) ) {
 				// No options available or sync is turned off for this field.
 				unset( $keys[ $key ] );
 			}
@@ -232,10 +241,10 @@ class Pods_Polylang_Sync_Meta
 	public function translate_meta( $value, $key, $pod, $lang ) {
 
 		$field = $pod->fields( $key );
-		if ( $field && $this->sync->is_field_sync_enabled( $field ) ) {
+		if ( $field && $this->translator()->is_field_sync_enabled( $field ) ) {
 			$field_type = pods_v( 'type', $field );
 			if ( in_array( $field_type, $this->translatable_field_types, true ) ) {
-				$value = $this->sync->get_meta_translations( $value, $lang, $field );
+				$value = $this->translator()->get_meta_translations( $value, $lang, $field );
 			}
 		}
 
