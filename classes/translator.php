@@ -25,6 +25,7 @@ class Translator extends Data
 		if ( ! $this->is_field_sync_enabled( $pod_field ) ) {
 			return null;
 		}
+
 		// Is it a single field or an array?
 		$single = false;
 		if ( ! is_array( $meta_val ) ) {
@@ -98,14 +99,6 @@ class Translator extends Data
 	 */
 	public function maybe_translate_post( $from_id, $lang, $translations = array() ) {
 
-		if ( empty( $translations ) ) {
-			$translations = $this->get_obj_translations( $from_id, 'post_type' );
-		}
-		if ( ! empty( $translations[ $lang ] ) ) {
-			// Already translated.
-			return $translations[ $lang ];
-		}
-
 		$new_id = $from_id;
 		$from   = get_post( $from_id );
 
@@ -113,6 +106,14 @@ class Translator extends Data
 
 			if ( ! $this->is_translation_enabled( $from ) ) {
 				return $from_id;
+			}
+
+			if ( empty( $translations ) ) {
+				$translations = $this->get_obj_translations( $from_id, 'post_type' );
+			}
+			if ( ! empty( $translations[ $lang ] ) ) {
+				// Already translated.
+				return $translations[ $lang ];
 			}
 
 			$data = get_object_vars( $from );
@@ -144,14 +145,6 @@ class Translator extends Data
 	 */
 	public function maybe_translate_term( $from_id, $lang, $translations = array() ) {
 
-		if ( empty( $translations ) ) {
-			$translations = $this->get_obj_translations( $from_id, 'taxonomy' );
-		}
-		if ( ! empty( $translations[ $lang ] ) ) {
-			// Already translated.
-			return $translations[ $lang ];
-		}
-
 		$new_id = $from_id;
 		$from   = get_term( $from_id );
 
@@ -159,6 +152,14 @@ class Translator extends Data
 
 			if ( ! $this->is_translation_enabled( $from ) ) {
 				return $from_id;
+			}
+
+			if ( empty( $translations ) ) {
+				$translations = $this->get_obj_translations( $from_id, 'taxonomy' );
+			}
+			if ( ! empty( $translations[ $lang ] ) ) {
+				// Already translated.
+				return $translations[ $lang ];
 			}
 
 			$data = get_object_vars( $from );
@@ -201,10 +202,7 @@ class Translator extends Data
 	 */
 	public function maybe_translate_media( $from_id, $lang, $translations = array() ) {
 		$type = 'attachment';
-
-		if ( $type !== get_post_type( $from_id ) ) {
-			return $this->maybe_translate_post( $from_id, $lang, $translations );
-		}
+		$attachment = get_post( $from_id );
 
 		if ( ! $this->is_translation_enabled( $from_id, $type ) ) {
 			return $from_id;
@@ -221,7 +219,7 @@ class Translator extends Data
 		add_filter( 'pll_enable_duplicate_media', '__return_false', 99 );
 
 		// Make sure metadata exists.
-		wp_maybe_generate_attachment_metadata( get_post( $from_id ) );
+		wp_maybe_generate_attachment_metadata( $attachment );
 
 		$src_language = pll_get_post_language( $from_id );
 
