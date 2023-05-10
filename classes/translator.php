@@ -122,8 +122,8 @@ class Translator extends Data
 			unset( $data['id'] );
 
 			// Get parent translation.
-			if ( $data['parent'] ) {
-				$data['parent'] = $this->get_post_translation( $data['parent'], $lang );
+			if ( ! empty( $data['post_parent'] ) ) {
+				$data['post_parent'] = $this->get_post_translation( $data['post_parent'], $lang );
 			}
 
 			$new_id = wp_insert_post( $data );
@@ -165,7 +165,7 @@ class Translator extends Data
 			$data = get_object_vars( $from );
 			unset( $data['term_id'] );
 
-			if ( $data['parent'] ) {
+			if ( ! empty( $data['parent'] ) ) {
 				$data['parent'] = $this->get_term_translation( $data['parent'], $lang );
 			}
 			if ( $data['slug'] ) {
