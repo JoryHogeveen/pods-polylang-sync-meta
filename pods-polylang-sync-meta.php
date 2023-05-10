@@ -91,8 +91,8 @@ class Pods_Polylang_Sync_Meta
 		 * @param int    $from  Id of the source
 		 * @param int    $to    Id of the target
 		 */
-		add_filter( 'pll_translate_post_metas', array( $this, 'filter_pll_translate_post_metas' ), 99999, 5 );
-		add_filter( 'pll_translate_term_metas', array( $this, 'filter_pll_translate_term_metas' ), 99999, 5 );
+		add_filter( 'pll_translate_post_meta', array( $this, 'filter_pll_translate_post_metas' ), 99999, 5 );
+		add_filter( 'pll_translate_term_meta', array( $this, 'filter_pll_translate_term_metas' ), 99999, 5 );
 	}
 
 	/**
