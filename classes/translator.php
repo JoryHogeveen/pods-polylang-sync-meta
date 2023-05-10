@@ -102,7 +102,7 @@ class Translator extends Data
 		$new_id = $from_id;
 		$from   = get_post( $from_id );
 
-		if ( $from instanceof WP_Post ) {
+		if ( $from instanceof \WP_Post ) {
 
 			if ( ! $this->is_translation_enabled( $from ) ) {
 				return $from_id;
@@ -148,7 +148,7 @@ class Translator extends Data
 		$new_id = $from_id;
 		$from   = get_term( $from_id );
 
-		if ( $from instanceof WP_Term ) {
+		if ( $from instanceof \WP_Term ) {
 
 			if ( ! $this->is_translation_enabled( $from ) ) {
 				return $from_id;

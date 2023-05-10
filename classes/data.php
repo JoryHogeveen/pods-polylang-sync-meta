@@ -28,13 +28,10 @@ abstract class Data
 
 	/**
 	 * Get Pod object type.
-	 * @param  Pods  $pod
+	 * @param  \Pods  $pod
 	 * @return string
 	 */
 	public function get_pod_type( $pod = null ) {
-		if ( ! $pod ) {
-			$pod = $this->cur_pod;
-		}
 		if ( ! $pod ) {
 			return '';
 		}
@@ -142,16 +139,16 @@ abstract class Data
 	 */
 	public function is_translation_enabled( $type, $obj_type = null ) {
 		if ( ! is_scalar( $type ) ) {
-			if ( $type instanceof WP_Post ) {
+			if ( $type instanceof \WP_Post ) {
 				$obj_type = 'post_type';
 				$type     = $type->post_type;
-			} elseif ( $type instanceof WP_Post_Type ) {
+			} elseif ( $type instanceof \WP_Post_Type ) {
 				$obj_type = 'post_type';
 				$type     = $type->name;
-			} elseif ( $type instanceof WP_Term ) {
+			} elseif ( $type instanceof \WP_Term ) {
 				$obj_type = 'taxonomy';
 				$type     = $type->taxonomy;
-			} elseif ( $type instanceof WP_Taxonomy ) {
+			} elseif ( $type instanceof \WP_Taxonomy ) {
 				$obj_type = 'taxonomy';
 				$type     = $type->name;
 			} else {
@@ -207,6 +204,10 @@ abstract class Data
 	 * @return bool
 	 */
 	public function is_field_sync_enabled( $field_data ) {
+		if ( ! $this->is_field_translatable( $field_data ) ) {
+			return false;
+		}
+
 		if ( pods_v( $this->pod_field_sync_option, $field_data, false ) ) {
 			return true;
 		}
