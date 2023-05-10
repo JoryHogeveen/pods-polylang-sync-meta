@@ -105,6 +105,7 @@ class Pods_Polylang_Sync_Meta
 		add_filter( 'pll_translate_term_metas', array( $this, 'filter_pll_translate_term_metas' ), 99999, 5 );
 
 		add_filter( 'pods_admin_setup_edit_field_options', array( $this, 'pods_edit_field_options' ), 12, 2 );
+	}
 
 	public function filter_pll_copy_post_metas( $keys, $sync, $from, $to, $lang ) {
 		$post = get_post( $from );
@@ -147,7 +148,7 @@ class Pods_Polylang_Sync_Meta
 		return $value;
 	}
 
-	public function filter_pll_translate_post_metas( $value, $key, $lang, $from, $to ) {
+	public function filter_pll_translate_term_metas( $value, $key, $lang, $from, $to ) {
 		$term = get_term( $from );
 		$pod = pods( $term );
 
