@@ -31,11 +31,13 @@ class Pods_Polylang_Sync_Meta
 	);
 
 	/**
-	 * @var Pods
+	 * @var Pods_Polylang_Sync_Meta\Admin
 	 */
-	public $cur_pod = null;
-
 	public $admin = null;
+
+	/**
+	 * @var Pods_Polylang_Sync_Meta\Translator
+	 */
 	public $translator = null;
 
 	public static function get_instance() {
