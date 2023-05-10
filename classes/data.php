@@ -50,7 +50,7 @@ abstract class Data
 	 * @return array
 	 */
 	public function get_obj_metadata( $id, $type = '' ) {
-		$type = ( $type ) ? $type : $this->get_pod_type();
+		$type = ( $type ) ? $type : $this->get_pod_type( $type );
 
 		$meta = array();
 		switch ( $type ) {
@@ -72,7 +72,7 @@ abstract class Data
 	 * @return string
 	 */
 	public function get_obj_language( $id, $field = 'slug', $type = '' ) {
-		$type = ( $type ) ? $type : $this->get_pod_type();
+		$type = ( $type ) ? $type : $this->get_pod_type( $type );
 
 		$lang = '';
 		switch ( $type ) {
@@ -94,7 +94,7 @@ abstract class Data
 	 * @return array
 	 */
 	public function get_obj_translations( $id, $type = '' ) {
-		$type = ( $type ) ? $type : $this->get_pod_type();
+		$type = ( $type ) ? $type : $this->get_pod_type( $type );
 
 		$translations = array();
 		switch ( $type ) {
@@ -116,7 +116,7 @@ abstract class Data
 	 * @return mixed
 	 */
 	public function update_obj_meta( $id, $key, $value, $prev = '', $type = '' ) {
-		$type = ( $type ) ? $type : $this->get_pod_type();
+		$type = ( $type ) ? $type : $this->get_pod_type( $type );
 
 		$success = null;
 		switch ( $type ) {
