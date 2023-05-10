@@ -55,6 +55,7 @@ class Pods_Polylang_Sync_Meta
 	 */
 	public function init() {
 
+		// @todo Also run on front-end?
 		if ( ! is_admin() ) {
 			return;
 		}
@@ -104,6 +105,9 @@ class Pods_Polylang_Sync_Meta
 		add_filter( 'pll_translate_post_metas', array( $this, 'filter_pll_translate_post_metas' ), 99999, 5 );
 		add_filter( 'pll_translate_term_metas', array( $this, 'filter_pll_translate_term_metas' ), 99999, 5 );
 
+		/**
+		 * Admin options.
+		 */
 		add_filter( 'pods_admin_setup_edit_field_options', array( $this, 'pods_edit_field_options' ), 12, 2 );
 	}
 
