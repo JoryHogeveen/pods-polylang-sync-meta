@@ -55,12 +55,13 @@ class Pods_Polylang_Sync_Meta
 			return;
 		}
 
-		include 'classes/data.php';
+		include 'classes/Plugin.php';
+		include 'classes/Data.php';
 
 		/**
 		 * Admin options.
 		 */
-		include 'classes/admin.php';
+		include 'classes/Admin.php';
 		$this->admin = Pods_Polylang_Sync_Meta\Admin::get_instance();
 
 		/**
