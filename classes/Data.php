@@ -2,7 +2,7 @@
 
 namespace Pods_Polylang_Sync_Meta;
 
-abstract class Data
+abstract class Data extends Plugin
 {
 	public $pod_field_sync_option = 'pods_polylang_sync_meta';
 
@@ -16,15 +16,6 @@ abstract class Data
 		'taxonomy',
 		'media',
 	);
-
-	/**
-	 * @param $key
-	 * @return mixed
-	 */
-	public function get_pll_option( $key ) {
-		$options = PLL()->options;
-		return ( isset( $options[ $key ] ) ) ? $options[ $key ] : null;
-	}
 
 	/**
 	 * Get Pod object type.
@@ -69,23 +60,12 @@ abstract class Data
 	/**
 	 * @param int    $id
 	 * @param string $type
+	 * @param string $field
 	 * @return string
 	 */
-	public function get_obj_language( $id, $field = 'slug', $type = '' ) {
+	public function get_obj_language( $id, $type = '', $field = 'slug' ) {
 		$type = ( $type ) ? $type : $this->get_pod_type( $type );
-
-		$lang = '';
-		switch ( $type ) {
-			case 'post':
-			case 'post_type':
-				$lang = pll_get_post_language( $id, $field );
-			break;
-			case 'term':
-			case 'taxonomy':
-				$lang = pll_get_term_language( $id, $field );
-			break;
-		}
-		return $lang;
+		return parent::get_obj_language( $id, $type, $field );
 	}
 
 	/**
@@ -95,19 +75,7 @@ abstract class Data
 	 */
 	public function get_obj_translations( $id, $type = '' ) {
 		$type = ( $type ) ? $type : $this->get_pod_type( $type );
-
-		$translations = array();
-		switch ( $type ) {
-			case 'post':
-			case 'post_type':
-				$translations = pll_get_post_translations( $id );
-			break;
-			case 'term':
-			case 'taxonomy':
-				$translations = pll_get_term_translations( $id );
-			break;
-		}
-		return $translations;
+		return parent::get_obj_translations( $id, $type );
 	}
 
 	/**
@@ -172,9 +140,6 @@ abstract class Data
 					}
 					$type = $post->post_type;
 				}
-				if ( pll_is_translated_post_type( $type ) ) {
-					return true;
-				}
 			break;
 			case 'term':
 			case 'taxonomy':
@@ -185,18 +150,10 @@ abstract class Data
 					}
 					$type = $term->taxonomy;
 				}
-				if ( pll_is_translated_taxonomy( $type ) ) {
-					return true;
-				}
-			break;
-			case 'media':
-			case 'attachment':
-				if ( $this->get_pll_option( 'media_support' ) ) {
-					return true;
-				}
 			break;
 		}
-		return false;
+
+		return parent::is_translation_enabled( $type, $obj_type );
 	}
 
 	/**
@@ -220,7 +177,6 @@ abstract class Data
 
 	/**
 	 * @param string|array|\Pods $pod
-	 *
 	 * @return bool
 	 */
 	public function is_pod_translatable( $pod ) {
