@@ -224,10 +224,20 @@ class Pods_Polylang_Sync_Meta
 			if ( $fields ) {
 				foreach ( $fields as $field ) {
 					if ( $this->translator()->is_field_sync_enabled( $field ) ) {
+
+						$single = null;
+						if ( is_callable( array( $field, 'is_multi_value' ) ) ) {
 							$single = ! $field->is_multi_value();
+						} else if ( is_callable( array( $field, 'get_limit' ) ) ) {
+							$single = 1 === $field->get_limit();
+						}
 
 						$value = $pod->field( $field->get_name(), (bool) $single, array( 'raw' => true, 'output' => 'ids' ) );
 						$translated_value = $this->translator()->get_meta_translation( $value, $_GET['new_lang'], $field );
+
+						if ( null === $single && is_array( $translated_value ) && 1 === count( $translated_value ) ) {
+							$translated_value = reset( $translated_value );
+						}
 
 						update_post_meta( $post->ID, $field->get_name(), $translated_value );
 					}
