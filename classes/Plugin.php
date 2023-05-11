@@ -6,8 +6,6 @@ class Plugin
 {
 	private static $_instance = null;
 
-	private $sync = array();
-
 	public static function get_instance() {
 		if ( null === self::$_instance ) {
 			self::$_instance = new self();
@@ -69,6 +67,12 @@ class Plugin
 		return ( isset( $GLOBALS['pagenow'], $_GET['from_post'], $_GET['new_lang'] ) && 'post-new.php' === $GLOBALS['pagenow'] );
 	}
 
+	/**
+	 * @param string $type
+	 * @param string $obj_type
+	 *
+	 * @return bool
+	 */
 	public function is_translation_enabled( $type, $obj_type = '' ) {
 
 		switch ( $obj_type ) {
@@ -95,6 +99,14 @@ class Plugin
 		return false;
 	}
 
+	/**
+	 * @param string $obj_type
+	 * @param int  $id
+	 * @param string $lang
+	 * @param array $translations
+	 *
+	 * @return bool
+	 */
 	public function save_translations( $obj_type, $id, $lang, $translations ) {
 
 		switch ( $obj_type ) {
@@ -121,6 +133,12 @@ class Plugin
 		return false;
 	}
 
+	/**
+	 * @param \WP_Post $post
+	 * @param string $lang
+	 *
+	 * @return int|\WP_Error
+	 */
 	public function create_post_translation( $post, $lang ) {
 		$data = get_object_vars( $post );
 
@@ -149,6 +167,12 @@ class Plugin
 		return $new_id;
 	}
 
+	/**
+	 * @param \WP_Term $term
+	 * @param string $lang
+	 *
+	 * @return int|null
+	 */
 	public function create_term_translation( $term, $lang ) {
 		$new_id = null;
 
@@ -182,6 +206,12 @@ class Plugin
 		return $new_id;
 	}
 
+	/**
+	 * @param \WP_Post $attachment
+	 * @param string $lang
+	 *
+	 * @return int|null
+	 */
 	public function create_media_translation( $attachment, $lang ) {
 		$new_id = null;
 
