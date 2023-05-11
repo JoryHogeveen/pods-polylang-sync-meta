@@ -144,6 +144,7 @@ class Pods_Polylang_Sync_Meta
 		if ( $pod->exists() ) {
 			return $this->remove_pods_meta_keys( $keys, $pod );
 		}
+
 		return $keys;
 	}
 
@@ -162,6 +163,7 @@ class Pods_Polylang_Sync_Meta
 		if ( $pod->exists() ) {
 			return $this->remove_pods_meta_keys( $keys, $pod );
 		}
+
 		return $keys;
 	}
 
@@ -181,6 +183,7 @@ class Pods_Polylang_Sync_Meta
 				unset( $keys[ $value ] );
 			}
 		}
+
 		return $keys;
 	}
 }

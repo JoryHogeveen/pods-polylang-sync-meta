@@ -45,7 +45,6 @@ class Meta extends Data
 			$this->maybe_add_pod_metadata( $pod, $meta_key, $meta_value, $unique );
 		}
 		return $check;
-
 	}
 
 	public function filter_update_post_metadata( $check, $object_id, $meta_key, $meta_value, $prev_value ) {
@@ -54,7 +53,6 @@ class Meta extends Data
 			$this->maybe_update_pod_metadata( $pod, $meta_key, $meta_value, $prev_value );
 		}
 		return $check;
-
 	}
 
 	public function filter_delete_post_metadata( $check, $object_id, $meta_key, $meta_value, $delete_all ) {
@@ -71,7 +69,6 @@ class Meta extends Data
 			$this->maybe_add_pod_metadata( $pod, $meta_key, $meta_value, $unique );
 		}
 		return $check;
-
 	}
 
 	public function filter_update_term_metadata( $check, $object_id, $meta_key, $meta_value, $prev_value ) {
@@ -80,7 +77,6 @@ class Meta extends Data
 			$this->maybe_update_pod_metadata( $pod, $meta_key, $meta_value, $prev_value );
 		}
 		return $check;
-
 	}
 
 	public function filter_delete_term_metadata( $check, $object_id, $meta_key, $meta_value, $delete_all ) {
