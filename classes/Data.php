@@ -194,10 +194,6 @@ abstract class Data extends Plugin
 	 * @return bool
 	 */
 	public function is_field_sync_enabled( $field_data ) {
-		if ( ! $this->is_field_translatable( $field_data ) ) {
-			return false;
-		}
-
 		if ( pods_v( $this->pod_field_sync_option, $field_data, false ) ) {
 			return true;
 		}

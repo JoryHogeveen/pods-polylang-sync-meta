@@ -132,7 +132,7 @@ class Meta extends Data
 			$field = $pod->fields( $field );
 		}
 
-		if ( ! $field || ! $this->is_field_translatable( $field ) ) {
+		if ( ! $field || ! $this->is_field_sync_enabled( $field ) ) {
 			return false;
 		}
 
