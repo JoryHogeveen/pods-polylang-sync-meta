@@ -6,6 +6,8 @@ class Meta extends Data
 {
 	private static $_instance = null;
 
+	private static $avoid_recursion = false;
+
 	private $translator = null;
 
 	public static function get_instance() {
@@ -36,42 +38,54 @@ class Meta extends Data
 	}
 
 	public function filter_add_post_metadata( $check, $object_id, $meta_key, $meta_value, $unique ) {
-		$pod = $this->get_pod( $object_id, 'post' );
-		$this->maybe_add_pod_metadata( $pod, $meta_key, $meta_value, $unique );
+		if ( ! self::$avoid_recursion ) {
+			$pod = $this->get_pod( $object_id, 'post' );
+			$this->maybe_add_pod_metadata( $pod, $meta_key, $meta_value, $unique );
+		}
 		return $check;
 
 	}
 
 	public function filter_update_post_metadata( $check, $object_id, $meta_key, $meta_value, $prev_value ) {
-		$pod = $this->get_pod( $object_id, 'post' );
-		$this->maybe_update_pod_metadata( $pod, $meta_key, $meta_value, $prev_value );
+		if ( ! self::$avoid_recursion ) {
+			$pod = $this->get_pod( $object_id, 'post' );
+			$this->maybe_update_pod_metadata( $pod, $meta_key, $meta_value, $prev_value );
+		}
 		return $check;
 
 	}
 
 	public function filter_delete_post_metadata( $check, $object_id, $meta_key, $meta_value, $delete_all ) {
-		$pod = $this->get_pod( $object_id, 'post' );
-		$this->maybe_delete_pod_metadata( $pod, $meta_key, $meta_value, $delete_all );
+		if ( ! self::$avoid_recursion ) {
+			$pod = $this->get_pod( $object_id, 'post' );
+			$this->maybe_delete_pod_metadata( $pod, $meta_key, $meta_value, $delete_all );
+		}
 		return $check;
 	}
 
 	public function filter_add_term_metadata( $check, $object_id, $meta_key, $meta_value, $unique ) {
-		$pod = $this->get_pod( $object_id, 'term' );
-		$this->maybe_add_pod_metadata( $pod, $meta_key, $meta_value, $unique );
+		if ( ! self::$avoid_recursion ) {
+			$pod = $this->get_pod( $object_id, 'term' );
+			$this->maybe_add_pod_metadata( $pod, $meta_key, $meta_value, $unique );
+		}
 		return $check;
 
 	}
 
 	public function filter_update_term_metadata( $check, $object_id, $meta_key, $meta_value, $prev_value ) {
-		$pod = $this->get_pod( $object_id, 'term' );
-		$this->maybe_update_pod_metadata( $pod, $meta_key, $meta_value, $prev_value );
+		if ( ! self::$avoid_recursion ) {
+			$pod = $this->get_pod( $object_id, 'term' );
+			$this->maybe_update_pod_metadata( $pod, $meta_key, $meta_value, $prev_value );
+		}
 		return $check;
 
 	}
 
 	public function filter_delete_term_metadata( $check, $object_id, $meta_key, $meta_value, $delete_all ) {
-		$pod = $this->get_pod( $object_id, 'term' );
-		$this->maybe_delete_pod_metadata( $pod, $meta_key, $meta_value, $delete_all );
+		if ( ! self::$avoid_recursion ) {
+			$pod = $this->get_pod( $object_id, 'term' );
+			$this->maybe_delete_pod_metadata( $pod, $meta_key, $meta_value, $delete_all );
+		}
 		return $check;
 	}
 
@@ -96,9 +110,11 @@ class Meta extends Data
 		$type         = $this->get_pod_type( $pod );
 		$translations = $this->translator()->get_meta_translations( $meta_value, $pod, $meta_key, false );
 
+		self::$avoid_recursion = true;
 		foreach ( $translations as $id => $value ) {
 			add_metadata( $type, $id, $meta_key, $value, $unique );
 		}
+		self::$avoid_recursion = false;
 	}
 
 	private function maybe_update_pod_metadata( $pod, $meta_key, $meta_value, $prev_value ) {
@@ -109,6 +125,7 @@ class Meta extends Data
 		$type         = $this->get_pod_type( $pod );
 		$translations = $this->translator()->get_meta_translations( $meta_value, $pod, $meta_key, false );
 
+		self::$avoid_recursion = true;
 		foreach ( $translations as $id => $value ) {
 			$prev_value = '';
 			if ( $do_prev_value ) {
@@ -116,6 +133,7 @@ class Meta extends Data
 			}
 			update_metadata( $type, $id, $meta_key, $value, $prev_value );
 		}
+		self::$avoid_recursion = false;
 	}
 
 	private function maybe_delete_pod_metadata( $pod, $meta_key, $meta_value, $delete_all ) {
@@ -131,8 +149,10 @@ class Meta extends Data
 			$translations = array_fill_keys( $translations, '' );
 		}
 
+		self::$avoid_recursion = true;
 		foreach ( $translations as $id => $value ) {
 			delete_metadata( $type, $id, $meta_key, $value, $delete_all );
 		}
+		self::$avoid_recursion = false;
 	}
 }
