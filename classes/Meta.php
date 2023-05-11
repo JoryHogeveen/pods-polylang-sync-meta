@@ -19,9 +19,9 @@ class Meta extends Data
 
 	private function __construct() {
 		foreach ( array( 'post', 'term' ) as $type ) {
-			add_filter( "add_{$type}_metadata", array( $this, "filter_add_{$type}_metadata" ), 1, 3 );
-			add_filter( "update_{$type}_metadata", array( $this, "filter_update_{$type}_metadata" ), 1, 3 );
-			add_filter( "delete_{$type}_metadata", array( $this, "filter_delete_{$type}_metadata" ), 1, 3 );
+			add_filter( "add_{$type}_metadata", array( $this, "filter_add_{$type}_metadata" ), 1, 5 );
+			add_filter( "update_{$type}_metadata", array( $this, "filter_update_{$type}_metadata" ), 1, 5 );
+			add_filter( "delete_{$type}_metadata", array( $this, "filter_delete_{$type}_metadata" ), 1, 5 );
 		}
 	}
 
