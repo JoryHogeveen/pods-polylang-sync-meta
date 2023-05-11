@@ -79,16 +79,21 @@ abstract class Data extends Plugin
 
 	/**
 	 * Get Pod fields.
-	 * @param  \Pods  $pod
+	 * @param  \Pods|\Pods\Whatsit\Pod  $pod
 	 * @return \Pods\Whatsit\Field|array
 	 */
 	public function get_pod_fields( $pod ) {
-		if ( is_callable( array( $pod->pod_data, 'get_fields' ) ) ) {
-			return $pod->pod_data->get_fields();
-		} else {
-			// Fallback. @todo Remove object fields.
-			return $pod->fields();
+		if ( $pod instanceof \Pods ) {
+			if ( is_callable( array( $pod->pod_data, 'get_fields' ) ) ) {
+				return $pod->pod_data->get_fields();
+			} else {
+				// Fallback. @todo Remove object fields.
+				return $pod->fields();
+			}
+		} else if ( is_callable( array( $pod, 'get_fields' ) ) ) {
+			return $pod->get_fields();
 		}
+		return [];
 	}
 
 	/**
