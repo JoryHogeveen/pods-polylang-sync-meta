@@ -173,7 +173,7 @@ class Pods_Polylang_Sync_Meta
 	 */
 	public function remove_pods_meta_keys( $keys, $pod ) {
 
-		foreach ( $pod->fields() as $key => $data ) {
+		foreach ( $this->translator()->get_pod_fields( $pod ) as $key => $data ) {
 			// Do not let Polylang handle meta sync for Pods fields.
 			unset( $keys[ $key ] );
 		}
