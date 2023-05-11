@@ -179,6 +179,7 @@ class Plugin
 	}
 
 	public function create_media_translation( $attachment, $lang ) {
+		$new_id = null;
 
 		add_filter( 'pll_enable_duplicate_media', '__return_false', 99 );
 
@@ -186,8 +187,6 @@ class Plugin
 		wp_maybe_generate_attachment_metadata( $attachment );
 
 		$src_language = pll_get_post_language( $attachment->ID );
-
-		$new_id = $attachment->ID;
 
 		if ( ! empty( $src_language ) && $lang !== $src_language ) {
 			if ( isset( PLL()->posts ) && is_callable( array( PLL()->posts, 'create_media_translation' ) ) ) {

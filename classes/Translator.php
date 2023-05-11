@@ -133,7 +133,6 @@ class Translator extends Data
 	 * @return int|null
 	 */
 	public function get_post_translation( $from_id, $lang, $translations = array() ) {
-
 		$new_id = $from_id;
 		$from   = get_post( $from_id );
 
@@ -164,7 +163,6 @@ class Translator extends Data
 	 * @return int|null
 	 */
 	public function get_term_translation( $from_id, $lang, $translations = array() ) {
-
 		$new_id = $from_id;
 		$from   = get_term( $from_id );
 
@@ -195,7 +193,7 @@ class Translator extends Data
 	 * @return int
 	 */
 	public function get_media_translation( $from_id, $lang, $translations = array() ) {
-		$type = 'attachment';
+		$type       = 'attachment';
 		$attachment = get_post( $from_id );
 
 		if ( ! $this->is_translation_enabled( $from_id, $type ) ) {
@@ -210,6 +208,8 @@ class Translator extends Data
 			return $translations[ $lang ];
 		}
 
-		return $this->create_media_translation( $attachment, $lang );
+		$new_id = $this->create_media_translation( $attachment, $lang );
+
+		return ( $new_id ) ? $new_id : $from_id;
 	}
 }
