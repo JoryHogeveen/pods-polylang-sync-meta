@@ -31,7 +31,7 @@ class Meta extends Data
 	 */
 	public function translator() {
 		if ( ! $this->translator ) {
-			$this->translator = \Pods_Polylang_Sync_Meta::get_instance()->translator();
+			$this->translator = pods_polylang_sync_meta()->translator();
 		}
 		return $this->translator;
 	}
