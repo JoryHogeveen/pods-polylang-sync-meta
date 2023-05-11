@@ -79,21 +79,6 @@ class Pods_Polylang_Sync_Meta
 		 */
 		add_filter( 'pll_copy_post_metas', array( $this, 'filter_pll_copy_post_metas' ), 99999, 5 );
 		add_filter( 'pll_copy_term_metas', array( $this, 'filter_pll_copy_term_metas' ), 99999, 5 );
-
-		/**
-		 * -- Docs from Polylang --
-		 * Filter a meta value before is copied or synchronized
-		 *
-		 * @since 2.3
-		 *
-		 * @param mixed  $value Meta value
-		 * @param string $key   Meta key
-		 * @param string $lang  Language of target
-		 * @param int    $from  Id of the source
-		 * @param int    $to    Id of the target
-		 */
-		add_filter( 'pll_translate_post_meta', array( $this, 'filter_pll_translate_post_metas' ), 99999, 5 );
-		add_filter( 'pll_translate_term_meta', array( $this, 'filter_pll_translate_term_metas' ), 99999, 5 );
 	}
 
 	/**
@@ -178,66 +163,9 @@ class Pods_Polylang_Sync_Meta
 	public function remove_pods_meta_keys( $keys, $pod ) {
 
 		foreach ( $pod->fields() as $key => $data ) {
-			if ( ! $this->translator()->is_field_sync_enabled( $data ) ) {
-				// No options available or sync is turned off for this field.
-				unset( $keys[ $key ] );
-			}
+			// Do not let Polylang handle meta sync for Pods fields.
+			unset( $keys[ $key ] );
 		}
 		return $keys;
-	}
-
-	/**
-	 * @param mixed  $value Meta value
-	 * @param string $key   Meta key
-	 * @param string $lang  Language of target
-	 * @param int    $from  Id of the source
-	 * @param int    $to    Id of the target
-	 *
-	 * @return mixed
-	 */
-	public function filter_pll_translate_post_metas( $value, $key, $lang, $from, $to ) {
-		$pod = pods( get_post_type( $from ), $from );
-
-		if ( $pod->exists() ) {
-			$value = $this->translate_meta( $value, $key, $pod, $lang );
-		}
-		return $value;
-	}
-
-	/**
-	 * @param mixed  $value Meta value
-	 * @param string $key   Meta key
-	 * @param string $lang  Language of target
-	 * @param int    $from  Id of the source
-	 * @param int    $to    Id of the target
-	 *
-	 * @return mixed
-	 */
-	public function filter_pll_translate_term_metas( $value, $key, $lang, $from, $to ) {
-		$term = get_term( $from );
-		$pod = pods( $term->taxonomy, $term->term_id );
-
-		if ( $pod->exists() ) {
-			$value = $this->translate_meta( $value, $key, $pod, $lang );
-		}
-		return $value;
-	}
-
-	/**
-	 * @param mixed  $value Meta value
-	 * @param string $key   Meta key
-	 * @param Pods   $pod  The pod object.
-	 * @param string $lang  Language of target
-	 *
-	 * @return mixed
-	 */
-	public function translate_meta( $value, $key, $pod, $lang ) {
-
-		$field = $pod->fields( $key );
-		if ( $field && $this->translator()->is_field_sync_enabled( $field ) ) {
-			$value = $this->translator()->get_meta_translations( $value, $lang, $field );
-		}
-
-		return $value;
 	}
 }
