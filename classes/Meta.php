@@ -27,7 +27,7 @@ class Meta extends Data
 		add_filter( 'update_term_metadata', array( $this, 'filter_update_term_metadata' ), 99999, 5 );
 		add_filter( 'delete_term_metadata', array( $this, 'filter_delete_term_metadata' ), 99999, 5 );
 
-		// The above filters only handle prefixed values (_pods_). This filter handles the actual values.
+		// The above filters only handle prefixed values (_pods_). This filter handles the actual relationship keys.
 		add_action( 'pods_api_save_relationships', array( $this, 'action_pods_api_save_relationships' ), 10, 4 );
 	}
 
