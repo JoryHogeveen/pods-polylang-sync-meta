@@ -117,12 +117,21 @@ class Meta extends Data
 		return $check;
 	}
 
-	public function check_meta( $pod, $meta_key ) {
+	/**
+	 * @param \Pods|\Pods\Whatsit\Pod|array $pod
+	 * @param \Pods\Whatsit\Field|string|array $field
+	 *
+	 * @return bool
+	 */
+	public function check_meta( $pod, $field ) {
 		if ( ! $this->is_pod_translatable( $pod ) ) {
 			return false;
 		}
 
-		$field = $pod->fields( $meta_key );
+		if ( is_string( $field ) ) {
+			$field = $pod->fields( $field );
+		}
+
 		if ( ! $field || ! $this->is_field_translatable( $field ) ) {
 			return false;
 		}
