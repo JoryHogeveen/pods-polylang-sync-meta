@@ -143,7 +143,7 @@ class Pods_Polylang_Sync_Meta
 	 * @return array
 	 */
 	public function filter_pll_copy_post_metas( $keys, $sync, $from, $to, $lang ) {
-		$pod = pods( get_post_type( $from ), $from );
+		$pod = $this->translator()->get_pod( $from, 'post' );
 
 		if ( $pod->exists() ) {
 			return $this->remove_pods_meta_keys( $keys, $pod );
@@ -161,8 +161,7 @@ class Pods_Polylang_Sync_Meta
 	 * @return array
 	 */
 	public function filter_pll_copy_term_metas( $keys, $sync, $from, $to, $lang ) {
-		$term = get_term( $from );
-		$pod = pods( $term->taxonomy, $term->term_id );
+		$pod = $this->translator()->get_pod( $from, 'term' );
 
 		if ( $pod->exists() ) {
 			return $this->remove_pods_meta_keys( $keys, $pod );

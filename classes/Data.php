@@ -18,6 +18,25 @@ abstract class Data extends Plugin
 	);
 
 	/**
+	 * @param int    $id
+	 * @param string $type
+	 * @return bool|\Pods
+	 */
+	public function get_pod( $id, $type ) {
+		switch ( $type ) {
+			case 'post':
+				$type = get_post_type( $id );
+			break;
+			case 'term':
+				$obj  = get_term( $id );
+				$type = $obj->taxonomy;
+			break;
+		}
+
+		return pods( $type, $id );
+	}
+
+	/**
 	 * Get Pod object type.
 	 * @param  \Pods  $pod
 	 * @return string
