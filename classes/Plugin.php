@@ -2,7 +2,7 @@
 
 namespace Pods_Polylang_Sync_Meta;
 
-class Plugin extends Data
+class Plugin
 {
 	private static $_instance = null;
 
