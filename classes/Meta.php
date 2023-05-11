@@ -113,11 +113,11 @@ class Meta extends Data
 		if ( ! $this->check_meta( $pod, $meta_key ) ) {
 			return;
 		}
+		self::$avoid_recursion = true;
 
 		$type         = $this->get_pod_type( $pod );
 		$translations = $this->translator()->get_meta_translations( $meta_value, $pod, $meta_key, false );
 
-		self::$avoid_recursion = true;
 		foreach ( $translations as $id => $value ) {
 			add_metadata( $type, $id, $meta_key, $value, $unique );
 		}
@@ -136,11 +136,11 @@ class Meta extends Data
 		if ( ! $this->check_meta( $pod, $meta_key ) ) {
 			return;
 		}
+		self::$avoid_recursion = true;
 
 		$type         = $this->get_pod_type( $pod );
 		$translations = $this->translator()->get_meta_translations( $meta_value, $pod, $meta_key, false );
 
-		self::$avoid_recursion = true;
 		foreach ( $translations as $id => $value ) {
 			$prev_value = '';
 			if ( $do_prev_value ) {
@@ -163,6 +163,7 @@ class Meta extends Data
 		if ( ! $this->check_meta( $pod, $meta_key ) ) {
 			return;
 		}
+		self::$avoid_recursion = true;
 
 		$type = $this->get_pod_type( $pod );
 		if ( $meta_value ) {
@@ -172,7 +173,6 @@ class Meta extends Data
 			$translations = array_fill_keys( $translations, '' );
 		}
 
-		self::$avoid_recursion = true;
 		foreach ( $translations as $id => $value ) {
 			delete_metadata( $type, $id, $meta_key, $value, $delete_all );
 		}
