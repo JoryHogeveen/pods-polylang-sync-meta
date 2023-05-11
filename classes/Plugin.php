@@ -128,6 +128,14 @@ class Plugin
 			$data['post_parent'] = pods_polylang_sync_meta()->translator()->get_post_translation( $data['post_parent'], $lang );
 		}
 
+		// Copy the date only if the synchronization is activated
+		if ( ! in_array( 'post_date', (array) $this->get_pll_option( 'sync' ), true ) ) {
+			unset( $data['post_date'] );
+			unset( $data['post_date_gmt'] );
+			unset( $data['post_modified'] );
+			unset( $data['post_modified_gmt'] );
+		}
+
 		$new_id = wp_insert_post( $data );
 
 		$translations[ $lang ] = $new_id;
