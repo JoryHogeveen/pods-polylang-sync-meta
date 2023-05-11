@@ -28,12 +28,17 @@ class Pods_Polylang_Sync_Meta
 	/**
 	 * @var Pods_Polylang_Sync_Meta\Admin
 	 */
-	public $admin = null;
+	private $admin = null;
+
+	/**
+	 * @var Pods_Polylang_Sync_Meta\Meta
+	 */
+	private $meta = null;
 
 	/**
 	 * @var Pods_Polylang_Sync_Meta\Translator
 	 */
-	public $translator = null;
+	private $translator = null;
 
 	public static function get_instance() {
 		if ( ! self::$instance ) {
@@ -63,6 +68,12 @@ class Pods_Polylang_Sync_Meta
 		 */
 		include 'classes/Admin.php';
 		$this->admin = Pods_Polylang_Sync_Meta\Admin::get_instance();
+
+		/**
+		 * Meta handlers.
+		 */
+		include 'classes/Meta.php';
+		$this->meta = Pods_Polylang_Sync_Meta\Admin::get_instance();
 
 		/**
 		 * -- Docs from Polylang --
