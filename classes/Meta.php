@@ -6,7 +6,7 @@ class Meta extends Data
 {
 	private static $_instance = null;
 
-	private $sync = array();
+	private $translator = null;
 
 	public static function get_instance() {
 		if ( null === self::$_instance ) {
@@ -21,6 +21,18 @@ class Meta extends Data
 			add_filter( "update_{$type}_metadata", array( $this, "filter_update_{$type}_metadata" ), 1, 3 );
 			add_filter( "delete_{$type}_metadata", array( $this, "filter_delete_{$type}_metadata" ), 1, 3 );
 		}
+	}
+
+	/**
+	 * Gets the translator class.
+	 * @return \Pods_Polylang_Sync_Meta\Translator|null
+	 */
+	public function translator() {
+		if ( ! $this->translator ) {
+			include 'classes/Translator.php';
+			$this->translator = \Pods_Polylang_Sync_Meta\Translator::get_instance();
+		}
+		return $this->translator;
 	}
 
 	public function filter_add_post_metadata( $check, $object_id, $meta_key, $meta_value, $unique ) {
@@ -81,6 +93,12 @@ class Meta extends Data
 			return;
 		}
 
+		$type         = $this->get_pod_type( $pod );
+		$translations = $this->translator()->get_meta_translations( $meta_value, $pod, $meta_key, false );
+
+		foreach ( $translations as $id => $value ) {
+			add_metadata( $type, $id, $meta_key, $value, $unique );
+		}
 	}
 
 	private function maybe_update_pod_metadata( $pod, $meta_key, $meta_value, $prev_value ) {
@@ -88,6 +106,16 @@ class Meta extends Data
 			return;
 		}
 
+		$type         = $this->get_pod_type( $pod );
+		$translations = $this->translator()->get_meta_translations( $meta_value, $pod, $meta_key, false );
+
+		foreach ( $translations as $id => $value ) {
+			$prev_value = '';
+			if ( $do_prev_value ) {
+				$prev_value = get_metadata_raw( $type, $id, $meta_key );
+			}
+			update_metadata( $type, $id, $meta_key, $value, $prev_value );
+		}
 	}
 
 	private function maybe_delete_pod_metadata( $pod, $meta_key, $meta_value, $delete_all ) {
@@ -95,5 +123,16 @@ class Meta extends Data
 			return;
 		}
 
+		$type = $this->get_pod_type( $pod );
+		if ( $meta_value ) {
+			$translations = $this->translator()->get_meta_translations( $meta_value, $pod, $meta_key, false );
+		} else {
+			$translations = $this->get_obj_translations( $pod->id(), $type );
+			$translations = array_fill_keys( $translations, '' );
+		}
+
+		foreach ( $translations as $id => $value ) {
+			delete_metadata( $type, $id, $meta_key, $value, $delete_all );
+		}
 	}
 }
