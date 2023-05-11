@@ -90,4 +90,66 @@ class Plugin extends Data
 
 		return false;
 	}
+
+	public function save_translations( $obj_type, $id, $lang, $translations ) {
+
+		switch ( $obj_type ) {
+			case 'post':
+			case 'post_type':
+				// Save the translations.
+				pll_set_post_language( $id, $lang );
+				pll_save_post_translations( $translations );
+			break;
+			case 'term':
+			case 'taxonomy':
+				// Save the translations.
+				pll_set_term_language( $id, $lang );
+				pll_save_post_translations( $translations );
+			break;
+			case 'media':
+			case 'attachment':
+				if ( $this->get_pll_option( 'media_support' ) ) {
+					return true;
+				}
+			break;
+		}
+
+		return false;
+	}
+
+	public function create_media_translation( $attachment, $lang ) {
+
+		add_filter( 'pll_enable_duplicate_media', '__return_false', 99 );
+
+		// Make sure metadata exists.
+		wp_maybe_generate_attachment_metadata( $attachment );
+
+		$src_language = pll_get_post_language( $attachment->ID );
+
+		$new_id = $attachment->ID;
+
+		if ( ! empty( $src_language ) && $lang !== $src_language ) {
+			if ( isset( PLL()->posts ) && is_callable( array( PLL()->posts, 'create_media_translation' ) ) ) {
+				$tr_id = PLL()->posts->create_media_translation( $new_id, $lang );
+			} elseif ( isset( PLL()->filters_media ) && is_callable( array( PLL()->filters_media, 'create_media_translation' ) ) ) {
+				// Fix for older Polylang Pro -> polylang/modules/media/admin-advanced-media.php // classname: PLL_Admin_Advanced_Media
+				remove_action( 'add_attachment', array( PLL()->advanced_media, 'duplicate_media' ), 20 ); // After default add (20)
+				$tr_id = PLL()->filters_media->create_media_translation( $new_id, $lang );
+				add_action( 'add_attachment', array( PLL()->advanced_media, 'duplicate_media' ), 20 ); // After default add (20)
+			}
+
+			if ( $tr_id ) {
+				$new_id = $tr_id;
+				/*$post   = get_post( $tr_id );
+				$new_id = $post->ID;
+				if ( $post ) {
+					wp_maybe_generate_attachment_metadata( $post );
+				}*/
+			}
+		}
+
+		remove_filter( 'pll_enable_duplicate_media', '__return_false', 99 );
+
+		return $new_id;
+	}
 }
