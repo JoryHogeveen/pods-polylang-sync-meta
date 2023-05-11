@@ -19,10 +19,11 @@ class Translator extends Data
 	 * @param mixed $meta_val
 	 * @param \Pods $pod
 	 * @param \Pods\Whatsit\Field|array|string $field
+	 * @param bool $include_current
 	 *
 	 * @return array
 	 */
-	public function get_meta_translations( $meta_val, $pod, $field ) {
+	public function get_meta_translations( $meta_val, $pod, $field, $include_current ) {
 		$current_id = $pod->id();
 		$translations = $this->get_obj_translations( $current_id, $this->get_pod_type( $pod ) );
 
@@ -33,6 +34,10 @@ class Translator extends Data
 		$translated = array();
 		foreach ( $translations as $lang => $id ) {
 			$translated[ $id ] = $this->get_meta_translation( $meta_val, $lang, $field );
+		}
+
+		if ( ! $include_current ) {
+			unset( $translated[ $current_id ] );
 		}
 
 		return $translated;
