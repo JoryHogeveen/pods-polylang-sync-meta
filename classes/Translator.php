@@ -23,7 +23,7 @@ class Translator extends Data
 	 *
 	 * @return array
 	 */
-	public function get_meta_translations( $meta_val, $pod, $field, $include_current ) {
+	public function get_meta_translations( $meta_val, $pod, $field, $include_current = true ) {
 		$current_id = $pod->id();
 		$translations = $this->get_obj_translations( $current_id, $this->get_pod_type( $pod ) );
 
