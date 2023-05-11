@@ -111,10 +111,12 @@ class Translator extends Data
 		if ( $single ) {
 			return reset( $new_meta_val );
 		}
+
 		// No new data found, just return originals (non translated).
 		if ( empty( $new_meta_val ) ) {
 			$new_meta_val = $meta_val;
 		}
+
 		return $new_meta_val;
 	}
 

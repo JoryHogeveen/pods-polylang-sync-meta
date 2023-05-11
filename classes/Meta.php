@@ -102,6 +102,14 @@ class Meta extends Data
 		return true;
 	}
 
+	/**
+	 * @param \Pods  $pod
+	 * @param string $meta_key
+	 * @param mixed  $meta_value
+	 * @param bool   $unique
+	 *
+	 * @return void
+	 */
 	private function maybe_add_pod_metadata( $pod, $meta_key, $meta_value, $unique ) {
 		if ( ! $this->check_meta( $pod, $meta_key ) ) {
 			return;
@@ -117,6 +125,14 @@ class Meta extends Data
 		self::$avoid_recursion = false;
 	}
 
+	/**
+	 * @param \Pods  $pod
+	 * @param string $meta_key
+	 * @param mixed  $meta_value
+	 * @param mixed  $prev_value
+	 *
+	 * @return void
+	 */
 	private function maybe_update_pod_metadata( $pod, $meta_key, $meta_value, $do_prev_value = null ) {
 		if ( ! $this->check_meta( $pod, $meta_key ) ) {
 			return;
@@ -136,6 +152,14 @@ class Meta extends Data
 		self::$avoid_recursion = false;
 	}
 
+	/**
+	 * @param \Pods  $pod
+	 * @param string $meta_key
+	 * @param mixed  $meta_value
+	 * @param bool   $delete_all
+	 *
+	 * @return void
+	 */
 	private function maybe_delete_pod_metadata( $pod, $meta_key, $meta_value, $delete_all ) {
 		if ( ! $this->check_meta( $pod, $meta_key ) ) {
 			return;
