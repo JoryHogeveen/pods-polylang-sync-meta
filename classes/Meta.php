@@ -117,7 +117,7 @@ class Meta extends Data
 		self::$avoid_recursion = false;
 	}
 
-	private function maybe_update_pod_metadata( $pod, $meta_key, $meta_value, $prev_value ) {
+	private function maybe_update_pod_metadata( $pod, $meta_key, $meta_value, $do_prev_value = null ) {
 		if ( ! $this->check_meta( $pod, $meta_key ) ) {
 			return;
 		}
