@@ -41,7 +41,7 @@ abstract class Data extends Plugin
 	 * @param  \Pods  $pod
 	 * @return string
 	 */
-	public function get_pod_type( $pod = null ) {
+	public function get_pod_type( $pod ) {
 		if ( ! $pod ) {
 			return '';
 		}
