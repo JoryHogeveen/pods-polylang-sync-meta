@@ -148,7 +148,7 @@ class Meta extends Data
 	 * @return void
 	 */
 	private function maybe_add_pod_metadata( $pod, $meta_key, $meta_value, $unique ) {
-		if ( ! $this->check_meta( $pod, $meta_key ) ) {
+		if ( self::$avoid_recursion || ! $this->check_meta( $pod, $meta_key ) ) {
 			return;
 		}
 		self::$avoid_recursion = true;
@@ -171,7 +171,7 @@ class Meta extends Data
 	 * @return void
 	 */
 	private function maybe_update_pod_metadata( $pod, $meta_key, $meta_value, $do_prev_value = null ) {
-		if ( ! $this->check_meta( $pod, $meta_key ) ) {
+		if ( self::$avoid_recursion || ! $this->check_meta( $pod, $meta_key ) ) {
 			return;
 		}
 		self::$avoid_recursion = true;
@@ -198,7 +198,7 @@ class Meta extends Data
 	 * @return void
 	 */
 	private function maybe_delete_pod_metadata( $pod, $meta_key, $meta_value, $delete_all ) {
-		if ( ! $this->check_meta( $pod, $meta_key ) ) {
+		if ( self::$avoid_recursion || ! $this->check_meta( $pod, $meta_key ) ) {
 			return;
 		}
 		self::$avoid_recursion = true;
