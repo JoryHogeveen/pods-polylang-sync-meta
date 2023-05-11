@@ -16,14 +16,37 @@ class Translator extends Data
 	private function __construct() {}
 
 	/**
-	 * @param  int|int[]  $meta_val
-	 * @param  string     $lang
-	 * @param  array      $pod_field
+	 * @param mixed $meta_val
+	 * @param \Pods $pod
+	 * @param \Pods\Whatsit\Field|array|string $field
+	 *
+	 * @return array
+	 */
+	public function get_meta_translations( $meta_val, $pod, $field ) {
+		$current_id = $pod->id();
+		$translations = $this->get_obj_translations( $current_id, $this->get_pod_type( $pod ) );
+
+		if ( is_string( $field ) ) {
+			$field = $pod->fields( $field );
+		}
+
+		$translated = array();
+		foreach ( $translations as $lang => $id ) {
+			$translated[ $id ] = $this->get_meta_translation( $meta_val, $lang, $field );
+		}
+
+		return $translated;
+	}
+
+	/**
+	 * @param  int|int[]                 $meta_val
+	 * @param  string                    $lang
+	 * @param  \Pods\Whatsit\Field|array $pod_field
 	 * @return array|mixed|null
 	 */
-	public function get_meta_translations( $meta_val, $lang, $pod_field ) {
-		if ( ! $this->is_field_sync_enabled( $pod_field ) ) {
 			return null;
+	public function get_meta_translation( $meta_val, $lang, $pod_field ) {
+		if ( ! $this->is_field_translatable( $pod_field ) ) {
 		}
 
 		// Is it a single field or an array?
