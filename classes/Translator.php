@@ -25,19 +25,21 @@ class Translator extends Data
 	 */
 	public function get_meta_translations( $meta_val, $pod, $field, $include_current = true ) {
 		$current_id = $pod->id();
-		$translations = $this->get_obj_translations( $current_id, $this->get_pod_type( $pod ) );
 
 		if ( is_string( $field ) ) {
 			$field = $pod->fields( $field );
 		}
 
-		$translated = array();
+		$translations = $this->get_obj_translations( $current_id, $this->get_pod_type( $pod ) );
+		$translated   = array();
 		foreach ( $translations as $lang => $id ) {
+			if ( (int) $id === (int) $current_id ) {
+				if ( $include_current ) {
+					$translated[ $id ] = $meta_val;
+				}
+				continue;
+			}
 			$translated[ $id ] = $this->get_meta_translation( $meta_val, $lang, $field );
-		}
-
-		if ( ! $include_current ) {
-			unset( $translated[ $current_id ] );
 		}
 
 		return $translated;
