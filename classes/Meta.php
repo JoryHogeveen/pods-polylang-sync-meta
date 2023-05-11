@@ -26,6 +26,9 @@ class Meta extends Data
 		add_filter( 'add_term_metadata', array( $this, 'filter_add_term_metadata' ), 99999, 5 );
 		add_filter( 'update_term_metadata', array( $this, 'filter_update_term_metadata' ), 99999, 5 );
 		add_filter( 'delete_term_metadata', array( $this, 'filter_delete_term_metadata' ), 99999, 5 );
+
+		// The above filters only handle prefixed values (_pods_). This filter handles the actual values.
+		add_action( 'pods_api_save_relationships', array( $this, 'action_pods_api_save_relationships' ), 10, 4 );
 	}
 
 	/**
@@ -37,6 +40,33 @@ class Meta extends Data
 			$this->translator = pods_polylang_sync_meta()->translator();
 		}
 		return $this->translator;
+	}
+
+	/**
+	 * @param int                       $id          ID of item.
+	 * @param array                     $related_ids ID(s) for items to save.
+	 * @param array|\Pods\Whatsit\Pod   $pod         The Pod object.
+	 * @param array|\Pods\Whatsit\Field $field       The Field object.
+	 * @return void
+	 */
+	public function action_pods_api_save_relationships( $id, $related_ids, $field, $pod ) {
+		if ( self::$avoid_recursion || ! $this->check_meta( $pod, $field ) ) {
+			return;
+		}
+		self::$avoid_recursion = true;
+
+		$pod_obj = pods( $pod['name'], $id );
+		if ( ! $pod_obj ) {
+			return;
+		}
+
+		$translations = $this->translator()->get_meta_translations( $related_ids, $pod_obj, $field, false );
+
+		foreach ( $translations as $id => $value ) {
+			pods_api()->save_relationships( $id, $value, $pod, $field );
+		}
+
+		self::$avoid_recursion = false;
 	}
 
 	public function filter_add_post_metadata( $check, $object_id, $meta_key, $meta_value, $unique ) {
