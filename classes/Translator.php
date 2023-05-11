@@ -151,21 +151,7 @@ class Translator extends Data
 				return $translations[ $lang ];
 			}
 
-			$data = get_object_vars( $from );
-
-			unset( $data['ID'] );
-			unset( $data['id'] );
-
-			// Get parent translation.
-			if ( ! empty( $data['post_parent'] ) ) {
-				$data['post_parent'] = $this->get_post_translation( $data['post_parent'], $lang );
-			}
-
-			$new_id = wp_insert_post( $data );
-
-			$translations[ $lang ] = $new_id;
-
-			$this->save_translations( 'post', $new_id, $lang, $translations );
+			$new_id = $this->create_post_translation( $from, $lang );
 		}
 		return $new_id;
 	}
@@ -196,32 +182,7 @@ class Translator extends Data
 				return $translations[ $lang ];
 			}
 
-			$data = get_object_vars( $from );
-			unset( $data['term_id'] );
-
-			if ( ! empty( $data['parent'] ) ) {
-				$data['parent'] = $this->get_term_translation( $data['parent'], $lang );
-			}
-			if ( $data['slug'] ) {
-				$data['slug'] .= '-' . $lang;
-			}
-
-			// Remove unnecessary data.
-			$data = array_intersect_key( $data, array(
-				'alias_of'    => 1,
-				'description' => 1,
-				'parent'      => 1,
-				'slug'        => 1,
-			) );
-
-			$new = wp_insert_term( $from->name . ' ' . $lang, $from->taxonomy, $data );
-
-			if ( ! empty( $new['term_id'] ) ) {
-				$new_id = $new['term_id'];
-				$translations[ $lang ] = $new_id;
-
-				$this->save_translations( 'post', $new_id, $lang, $translations );
-			}
+			$new_id = $this->create_term_translation( $from, $lang );
 		}
 		return $new_id;
 	}

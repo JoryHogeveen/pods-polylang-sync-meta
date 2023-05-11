@@ -117,6 +117,59 @@ class Plugin
 		return false;
 	}
 
+	public function create_post_translation( $post, $lang ) {
+		$data = get_object_vars( $post );
+
+		unset( $data['ID'] );
+		unset( $data['id'] );
+
+		// Get parent translation.
+		if ( ! empty( $data['post_parent'] ) ) {
+			$data['post_parent'] = pods_polylang_sync_meta()->translator()->get_post_translation( $data['post_parent'], $lang );
+		}
+
+		$new_id = wp_insert_post( $data );
+
+		$translations[ $lang ] = $new_id;
+
+		$this->save_translations( 'post', $new_id, $lang, $translations );
+
+		return $new_id;
+	}
+
+	public function create_term_translation( $term, $lang ) {
+		$new_id = null;
+
+		$data = get_object_vars( $term );
+		unset( $data['term_id'] );
+
+		if ( ! empty( $data['parent'] ) ) {
+			$data['parent'] = pods_polylang_sync_meta()->translator()->get_term_translation( $data['parent'], $lang );
+		}
+		if ( $data['slug'] ) {
+			$data['slug'] .= '-' . $lang;
+		}
+
+		// Remove unnecessary data.
+		$data = array_intersect_key( $data, array(
+			'alias_of'    => 1,
+			'description' => 1,
+			'parent'      => 1,
+			'slug'        => 1,
+		) );
+
+		$new = wp_insert_term( $term->name . ' ' . $lang, $term->taxonomy, $data );
+
+		if ( ! empty( $new['term_id'] ) ) {
+			$new_id = $new['term_id'];
+			$translations[ $lang ] = $new_id;
+
+			$this->save_translations( 'post', $new_id, $lang, $translations );
+		}
+
+		return $new_id;
+	}
+
 	public function create_media_translation( $attachment, $lang ) {
 
 		add_filter( 'pll_enable_duplicate_media', '__return_false', 99 );
