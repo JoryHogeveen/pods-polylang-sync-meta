@@ -44,9 +44,9 @@ class Translator extends Data
 	 * @param  \Pods\Whatsit\Field|array $pod_field
 	 * @return array|mixed|null
 	 */
-			return null;
 	public function get_meta_translation( $meta_val, $lang, $pod_field ) {
 		if ( ! $this->is_field_translatable( $pod_field ) ) {
+			return $meta_val;
 		}
 
 		// Is it a single field or an array?
