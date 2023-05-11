@@ -83,26 +83,29 @@ class Translator extends Data
 				$new_meta_val[] = $translations[ $lang ];
 
 			} else {
-
 				// This translation does not exists.
-				if ( 'post_type' === $type ) {
+				switch ( $type ) {
+					case 'post':
+					case 'post_type':
+						if ( 'attachment' === get_post_type( $rel_id ) ) {
+							// @todo Always create new attachment??
+							$new_meta_val[] = $this->get_media_translation( $rel_id, $lang );
+						} else {
+							// @todo Always create new post??
+							$new_meta_val[] = $this->get_post_translation( $rel_id, $lang, $translations );
+						}
+						break;
 
-					if ( 'attachment' === get_post_type( $rel_id ) ) {
-						// create attachment translation.
-						//$attachment = get_post( $rel_id );
-						//$new_meta_val[] = $this->translate_attachment( $rel_id, $lang, $attachment->post_parent );
-						$new_meta_val[] = $this->get_media_translation( $rel_id, $lang );
-					} else {
-						// @todo Create new post??
-						$new_meta_val[] = $this->get_post_translation( $rel_id, $lang, $translations );
-					}
+					case 'taxonomy':
+					case 'term':
+						// @todo Always create new term??
+						$new_meta_val[] = $this->get_term_translation( $rel_id, $lang, $translations );
+						break;
 
-				} elseif ( 'taxonomy' === $type ) {
-					// @todo Create new term??
-					$new_meta_val[] = $this->get_term_translation( $rel_id, $lang, $translations );
-				} else {
-					// Just use regular one
-					$new_meta_val[] = $rel_id;
+					default:
+						// Just use regular one
+						$new_meta_val[] = $rel_id;
+						break;
 				}
 			}
 		}
