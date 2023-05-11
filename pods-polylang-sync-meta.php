@@ -73,7 +73,7 @@ class Pods_Polylang_Sync_Meta
 		 * Meta handlers.
 		 */
 		include 'classes/Meta.php';
-		$this->meta = Pods_Polylang_Sync_Meta\Admin::get_instance();
+		$this->meta = Pods_Polylang_Sync_Meta\Meta::get_instance();
 
 		/**
 		 * -- Docs from Polylang --
@@ -123,7 +123,7 @@ class Pods_Polylang_Sync_Meta
 	 */
 	public function translator() {
 		if ( ! $this->translator ) {
-			include 'classes/translator.php';
+			include 'classes/Translator.php';
 			$this->translator = Pods_Polylang_Sync_Meta\Translator::get_instance();
 		}
 		return $this->translator;
