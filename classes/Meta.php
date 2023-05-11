@@ -31,8 +31,7 @@ class Meta extends Data
 	 */
 	public function translator() {
 		if ( ! $this->translator ) {
-			include 'classes/Translator.php';
-			$this->translator = \Pods_Polylang_Sync_Meta\Translator::get_instance();
+			$this->translator = \Pods_Polylang_Sync_Meta::get_instance()->translator();
 		}
 		return $this->translator;
 	}
