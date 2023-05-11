@@ -55,6 +55,29 @@ abstract class Data extends Plugin
 	}
 
 	/**
+	 * Get Pod object meta type.
+	 * @param  \Pods  $pod
+	 * @return string
+	 */
+	public function get_pod_meta_type( $pod ) {
+		$type = $this->get_pod_type( $pod );
+
+		switch ( $type ) {
+			case 'post':
+			case 'post_type':
+			case 'media':
+			case 'attachment':
+				$type = 'post';
+			break;
+			case 'term':
+			case 'taxonomy':
+				$type = 'term';
+			break;
+		}
+		return $type;
+	}
+
+	/**
 	 * Get Pod fields.
 	 * @param  \Pods  $pod
 	 * @return \Pods\Whatsit\Field|array

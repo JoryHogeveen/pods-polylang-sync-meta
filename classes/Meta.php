@@ -153,12 +153,13 @@ class Meta extends Data
 		}
 		self::$avoid_recursion = true;
 
-		$type         = $this->get_pod_type( $pod );
+		$type         = $this->get_pod_meta_type( $pod );
 		$translations = $this->translator()->get_meta_translations( $meta_value, $pod, $meta_key, false );
 
 		foreach ( $translations as $id => $value ) {
 			add_metadata( $type, $id, $meta_key, $value, $unique );
 		}
+
 		self::$avoid_recursion = false;
 	}
 
@@ -176,7 +177,7 @@ class Meta extends Data
 		}
 		self::$avoid_recursion = true;
 
-		$type         = $this->get_pod_type( $pod );
+		$type         = $this->get_pod_meta_type( $pod );
 		$translations = $this->translator()->get_meta_translations( $meta_value, $pod, $meta_key, false );
 
 		foreach ( $translations as $id => $value ) {
@@ -186,6 +187,7 @@ class Meta extends Data
 			}
 			update_metadata( $type, $id, $meta_key, $value, $prev_value );
 		}
+
 		self::$avoid_recursion = false;
 	}
 
@@ -203,7 +205,7 @@ class Meta extends Data
 		}
 		self::$avoid_recursion = true;
 
-		$type = $this->get_pod_type( $pod );
+		$type = $this->get_pod_meta_type( $pod );
 		if ( $meta_value ) {
 			$translations = $this->translator()->get_meta_translations( $meta_value, $pod, $meta_key, false );
 		} else {
@@ -214,6 +216,7 @@ class Meta extends Data
 		foreach ( $translations as $id => $value ) {
 			delete_metadata( $type, $id, $meta_key, $value, $delete_all );
 		}
+
 		self::$avoid_recursion = false;
 	}
 }
