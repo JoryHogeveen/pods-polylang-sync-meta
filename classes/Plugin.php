@@ -65,6 +65,10 @@ class Plugin
 		return $translations;
 	}
 
+	public function is_new_post_page() {
+		return ( isset( $GLOBALS['pagenow'], $_GET['from_post'], $_GET['new_lang'] ) && 'post-new.php' === $GLOBALS['pagenow'] );
+	}
+
 	public function is_translation_enabled( $type, $obj_type = '' ) {
 
 		switch ( $obj_type ) {

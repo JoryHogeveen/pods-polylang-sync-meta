@@ -90,6 +90,11 @@ class Pods_Polylang_Sync_Meta
 		 */
 		add_filter( 'pll_copy_post_metas', array( $this, 'filter_pll_copy_post_metas' ), 99999, 5 );
 		add_filter( 'pll_copy_term_metas', array( $this, 'filter_pll_copy_term_metas' ), 99999, 5 );
+
+		/**
+		 * Filter used to store draft metadata when creating a new post translation.
+		 */
+		add_filter( 'use_block_editor_for_post', array( $this, 'new_post_translation' ), 99999 ); // After polylang.
 	}
 
 	/**
@@ -189,5 +194,47 @@ class Pods_Polylang_Sync_Meta
 		}
 
 		return $keys;
+	}
+
+	/**
+	 * Copy Pods fields when creating a new translation.
+	 * @see \PLL_Admin_Sync::new_post_translation()
+	 * @param array $data An array of slashed post data.
+	 * @return array
+	 */
+	public function new_post_translation( $is_block_editor ) {
+		global $post;
+		static $done = array();
+
+		if ( $this->translator()->is_new_post_page() && $this->translator()->is_translation_enabled( $post->post_type, 'post_type' ) ) {
+			check_admin_referer( 'new-post-translation' );
+
+			$from_post_id = (int) $_GET['from_post'];
+			if ( ! empty( $done[ $from_post_id ] ) ) {
+				return $is_block_editor;
+			}
+			$done[ $from_post_id ] = true; // Avoid a second duplication in the block editor. Using an array only to allow multiple phpunit tests.
+
+			$pod = pods( $post->post_type, $from_post_id );
+			if ( ! $pod->exists() ) {
+				return $is_block_editor;
+			}
+
+			$fields = $this->translator()->get_pod_fields( $pod ) ;
+			if ( $fields ) {
+				foreach ( $fields as $field ) {
+					if ( $this->translator()->is_field_sync_enabled( $field ) ) {
+							$single = ! $field->is_multi_value();
+
+						$value = $pod->field( $field->get_name(), (bool) $single, array( 'raw' => true, 'output' => 'ids' ) );
+						$translated_value = $this->translator()->get_meta_translation( $value, $_GET['new_lang'], $field );
+
+						update_post_meta( $post->ID, $field->get_name(), $translated_value );
+					}
+				}
+			}
+		}
+
+		return $is_block_editor;
 	}
 }
