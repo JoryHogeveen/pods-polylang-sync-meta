@@ -29,7 +29,9 @@ abstract class Data extends Plugin
 			break;
 			case 'term':
 				$obj  = get_term( $id );
-				$type = $obj->taxonomy;
+				if ( $obj ) {
+					$type = $obj->taxonomy;
+				}
 			break;
 		}
 
