@@ -216,7 +216,7 @@ class Pods_Polylang_Sync_Meta
 			$done[ $from_post_id ] = true; // Avoid a second duplication in the block editor. Using an array only to allow multiple phpunit tests.
 
 			$pod = pods( $post->post_type, $from_post_id );
-			if ( ! $pod->exists() ) {
+			if ( ! $pod || ! $pod->exists() ) {
 				return $is_block_editor;
 			}
 
