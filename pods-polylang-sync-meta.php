@@ -146,7 +146,7 @@ class Pods_Polylang_Sync_Meta
 	public function filter_pll_copy_post_metas( $keys, $sync, $from, $to, $lang ) {
 		$pod = $this->translator()->get_pod( $from, 'post' );
 
-		if ( $pod->exists() ) {
+		if ( $pod && $pod->exists() ) {
 			return $this->remove_pods_meta_keys( $keys, $pod );
 		}
 
